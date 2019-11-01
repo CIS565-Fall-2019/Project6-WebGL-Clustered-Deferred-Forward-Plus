@@ -23,6 +23,10 @@ project, and we will not be able to grade you without a good README.
 This assignment has a considerable amount of performance analysis compared
 to implementation work. Complete the implementation early to leave time!
 
+### Notes
+- Tiles - 2D, taken from eyepoint
+- Cluster - the triangles formed when creating tiles, but now cut up along z
+
 
 ### Credits
 

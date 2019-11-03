@@ -17,8 +17,8 @@ class SphereRayIntersectionTest {
   constructor(sphere, p1, p2) {
     // Init values
     this._intersects = false;
-    this._intersect1 = new Vector3(0, 0, 0);
-    this._intersect2 = new Vector3(0, 0, 0);
+    this._i1 = new Vector3(0, 0, 0);
+    this._i2 = new Vector3(0, 0, 0);
 
     // Extract values
     let lx = p2.x - p1.x;
@@ -45,9 +45,13 @@ class SphereRayIntersectionTest {
       this._intersects = true;
 
       let q1 = (-b + Math.sqrt(inner_quadratic)) / (2*a);
-      let q2 = (-b + Math.sqrt(inner_quadratic)) / (2*a);
-      this._intersect1.copy(p1 + q1*(p2 - p1));
-      this._intersect2.copy(p1 + q2*(p2 - p1));
+      let q2 = (-b - Math.sqrt(inner_quadratic)) / (2*a);
+
+      // Have to use crazy functions because JS
+      //this._i1 = (p1 + q1*(p2 - p1));
+      let tmp = new Vector3();
+      this._i1.copy(tmp.copy(p2).sub(p1).multiplyScalar(q1).add(p1));
+      this._i2.copy(tmp.copy(p2).sub(p1).multiplyScalar(q2).add(p1));
     }
   }
 
@@ -56,11 +60,11 @@ class SphereRayIntersectionTest {
   }
 
   getPoint1() {
-    return this._intersect1;
+    return this._i1;
   }
 
   getPoint2() {
-    return this._intersect2;
+    return this._i2;
   }
 }
 
@@ -204,13 +208,22 @@ export default class BaseRenderer {
 
               let currLights = this._clusterTexture.buffer[clusterLightIdx];
               if(currLights < MAX_LIGHTS_PER_CLUSTER) {
-                // Toss in the light index info
-                let newClusterLightIdx = this._clusterTexture.bufferIndex(clusterIdx, currLights + 1);
-                
-                this._clusterTexture.buffer[newClusterLightIdx] = lightIdx;
-                this._clusterTexture.buffer[clusterLightIdx]++;
-              }
+                // We good, increment our light count.
+                currLights++;
 
+                // Locate the correct part of the pixel to populate
+                let pixel = Math.floor(currLights / 4);
+
+                // We have to do this because of the way that  the buffers are defined
+                // Each _clusterBuffer contains many pixels that are really 4 floats
+                // So we are abusing that fact to carry over non-rgba data
+                // Why doesn't webGL have NORMAL DATA? Because whoever wrote it is dumb.
+                let base = this._clusterTexture.bufferIndex(clusterIdx, pixel);
+                let offset = currLights - pixel * 4;
+
+                this._clusterTexture.buffer[base + offset]   = lightIdx;
+                this._clusterTexture.buffer[clusterLightIdx] = currLights;
+              }
             }
           }
 

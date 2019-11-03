@@ -59,36 +59,13 @@ export default function(params) {
     }
   }
 
-// https://docs.unity3d.com/Manual/FrustumSizeAtDistance.html
-  float GetFrustrumWidth(float depth) {
-    float PI = 3.1415926535897932384626433832795;
-    return 2.0 * depth * tan(u_camera_fov * 0.5 * (PI / float(180)));
-  }
-
+  // https://docs.unity3d.com/Manual/FrustumSizeAtDistance.html
   float GetFrustrumHeight(float depth) {
-    return GetFrustrumWidth(depth) / u_camera_aspect;
+    float PI = 3.1415926535897932384626433832795;
+    return 2.0 * depth * tan(u_camera_fov * 0.5 *(PI / float(180)));
   }
-
-  int PositionToCluster(vec3 position) {
-    // Takes in a position and calculates what cluster belongs to it
-    // Position is in View space, so it relates directly to our view stuff
-    // Need some bounds for the view frustrum
-    vec4 view_pos = u_view_matrix * vec4(position, 1.0);
-    float zDepth = view_pos.z;
-    float width  = GetFrustrumWidth(zDepth);
-    float height = GetFrustrumHeight(zDepth);
-    float depth  = u_camera_far - u_camera_near;
-
-    // Armed with the above, get x, y, and z
-    // IDK why true_pos wont work.
-    int x = int((view_pos.x + (width/2.0)) / width * u_x_slices);
-    int y = int((view_pos.y + (height/2.0)) / height * u_y_slices);
-    // I got help on figuring this one out. Not sure how it works still.
-    float z = log(-zDepth)
-            * (u_z_slices / log(u_camera_far / u_camera_near)) 
-            - ((u_z_slices * log(u_camera_near)) / log(u_camera_far / u_camera_near));
-    
-    return x + y * int(u_x_slices) + int(z) * int(u_x_slices) * int(u_y_slices);
+  float GetFrustrumWidth(float depth) {
+    return GetFrustrumHeight(depth) * u_camera_aspect;
   }
 
   vec3 PositionToClusterVec3(vec3 position) {
@@ -103,14 +80,24 @@ export default function(params) {
 
     // Armed with the above, get x, y, and z
     // IDK why true_pos wont work.
-    int x = int((view_pos.x + (width/2.0)) / width * u_x_slices);
-    int y = int((view_pos.y + (height/2.0)) / height * u_y_slices);
+    int x = int(((view_pos.x + (width/2.0)) / width) * u_x_slices);
+    int y = int(((view_pos.y + (height/2.0)) / height) * u_y_slices);
     // I got help on figuring this one out. Not sure how it works still.
-    float z = log(-zDepth)
+    // But we choose to define the z cluster logarithmically
+    // So far away clusters are larger
+    float z = log(-zDepth) 
             * (u_z_slices / log(u_camera_far / u_camera_near)) 
             - ((u_z_slices * log(u_camera_near)) / log(u_camera_far / u_camera_near));
     
-    return vec3(x, y, z);
+    return vec3(x, y, int(z));
+  }
+
+  int PositionToCluster(vec3 position) {
+    // Takes in a position and calculates what cluster belongs to it
+    // Position is in View space, so it relates directly to our view stuff
+    // Need some bounds for the view frustrum
+    vec3 p = PositionToClusterVec3(position);
+    return int(p.x) + int(p.y) * int(u_x_slices) + int(p.z) * int(u_x_slices) * int(u_y_slices);
   }
 
   Light UnpackLight(int index) {
@@ -202,7 +189,7 @@ export default function(params) {
     const vec3 ambientLight = vec3(0.025);
     fragColor += albedo * ambientLight;
 
-    gl_FragColor = vec4(debug_clusterColor, 1.0);
+    gl_FragColor = vec4(fragColor, 1.0);
   }
   `;
 }

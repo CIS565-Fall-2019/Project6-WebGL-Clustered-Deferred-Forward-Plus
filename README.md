@@ -37,7 +37,9 @@ If we simply calculate the tangent line and take the area in between of these tw
     <img src = img/tangents.png>
 <p\>
 
+
 #### Deferred Shading
+
 This is a technique to decoupling lights from geometry. In the first pass we generate textures that store normal, albedo and other information we need to do shading. In the second pass we calculate the color for each pixel by looping the lights and using the textures generated before.
 
 ## Performance Analysis

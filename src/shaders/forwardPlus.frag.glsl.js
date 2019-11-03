@@ -11,6 +11,15 @@ export default function(params) {
 
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
+  uniform int u_xSlices;
+  uniform int u_ySlices;
+  uniform int u_zSlices;
+  uniform int u_maxLightsPerCluster;
+  uniform float u_screenH;
+  uniform float u_screenW;
+  uniform mat4 u_viewMat;
+  uniform float u_camNear;
+  uniform float u_camFar;
 
   varying vec3 v_position;
   varying vec3 v_normal;
@@ -79,10 +88,30 @@ export default function(params) {
     vec3 normap = texture2D(u_normap, v_uv).xyz;
     vec3 normal = applyNormalMap(v_normal, normap);
 
+    // Determine the cluster for this fragment
+    vec4 pos = u_viewMat * vec4(v_position.xyz, 1.0);
+
+    int xSlice = int(gl_FragCoord.x / (u_screenW / float(u_xSlices)));
+    int ySlice = int(gl_FragCoord.y / (u_screenH / float(u_ySlices)));
+    int zSlice = int((-pos.z - u_camNear) / ((u_camFar - u_camNear) / float(u_zSlices)));
+
+    int idx = xSlice + ySlice * u_xSlices + zSlice * u_xSlices * u_ySlices;
+
+    // Get lights in that cluster from buffer
+    int nClusters =u_xSlices*u_ySlices*u_zSlices;
+    float cIdx = float(idx + 1) / float(nClusters + 1);
+    int nLights = int(texture2D(u_clusterbuffer, vec2(cIdx,0)).r);
+
+    int maxDim = int(ceil(float(u_maxLightsPerCluster + 1) / 4.0));
+
     vec3 fragColor = vec3(0.0);
 
+    // Compute shading for each light in this cluster
     for (int i = 0; i < ${params.numLights}; ++i) {
-      Light light = UnpackLight(i);
+      if(i >= nLights) { break; } //glsl doesn't allow non constant variables in loop expression
+
+      int tIdx = int(ExtractFloat(u_clusterbuffer, nClusters, maxDim, idx, i+1));
+      Light light = UnpackLight(tIdx);
       float lightDistance = distance(light.position, v_position);
       vec3 L = (light.position - v_position) / lightDistance;
 
@@ -96,6 +125,7 @@ export default function(params) {
     fragColor += albedo * ambientLight;
 
     gl_FragColor = vec4(fragColor, 1.0);
+
   }
   `;
 }

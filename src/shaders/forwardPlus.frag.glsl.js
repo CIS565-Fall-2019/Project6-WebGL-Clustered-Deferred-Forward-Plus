@@ -91,6 +91,28 @@ export default function(params) {
     return x + y * int(u_x_slices) + int(z) * int(u_x_slices) * int(u_y_slices);
   }
 
+  vec3 PositionToClusterVec3(vec3 position) {
+    // Takes in a position and calculates what cluster belongs to it
+    // Position is in View space, so it relates directly to our view stuff
+    // Need some bounds for the view frustrum
+    vec4 view_pos = u_view_matrix * vec4(position, 1.0);
+    float zDepth = view_pos.z;
+    float width  = GetFrustrumWidth(zDepth);
+    float height = GetFrustrumHeight(zDepth);
+    float depth  = u_camera_far - u_camera_near;
+
+    // Armed with the above, get x, y, and z
+    // IDK why true_pos wont work.
+    int x = int(view_pos.x * u_x_slices / width);
+    int y = int(view_pos.y * u_y_slices / height);
+    // I got help on figuring this one out. Not sure how it works still.
+    float z = log(-zDepth)
+            * (u_z_slices / log(u_camera_far / u_camera_near)) 
+            - ((u_z_slices * log(u_camera_near)) / log(u_camera_far / u_camera_near));
+    
+    return vec3(x, y, z);
+  }
+
   Light UnpackLight(int index) {
     Light light;
     float u = float(index + 1) / float(${params.numLights + 1});
@@ -126,6 +148,10 @@ export default function(params) {
     vec3 fragColor = vec3(0.0);
 
     // Get cluster info
+    vec3 debug_clusterColor = PositionToClusterVec3(v_position);
+    debug_clusterColor.x /= u_x_slices;
+    debug_clusterColor.y /= u_y_slices;
+    debug_clusterColor.z /= u_z_slices;
     int clusterIdx = PositionToCluster(v_position);
     int totalClusters = int(u_x_slices * u_y_slices * u_z_slices);
 
@@ -176,7 +202,7 @@ export default function(params) {
     const vec3 ambientLight = vec3(0.025);
     fragColor += albedo * ambientLight;
 
-    gl_FragColor = vec4(fragColor, 1.0);
+    gl_FragColor = vec4(debug_clusterColor, 1.0);
   }
   `;
 }

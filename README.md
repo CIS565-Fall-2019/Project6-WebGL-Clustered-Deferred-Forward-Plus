@@ -1,3 +1,7 @@
+<p align="center">
+    <img src = img/demo.gif>
+<p\>
+
 WebGL Clustered and Deferred Shading
 ======================
 
@@ -12,8 +16,7 @@ ___
 [Online Demo](https://haco77.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/)
 
 ## Demo Video/GIF
-
-[![](img/video.png)](TODO)
+[![Demo](https://i.ytimg.com/vi/mDPZSAo4eNc/hqdefault.jpg)](https://www.youtube.com/embed/mDPZSAo4eNc)
 
 ## Introduction
 This is a WebGL implementation of clustered and deferred shading.

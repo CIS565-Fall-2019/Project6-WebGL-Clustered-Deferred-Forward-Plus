@@ -9,7 +9,7 @@ import fsSource from '../shaders/deferred.frag.glsl.js';
 import TextureBuffer from './textureBuffer';
 import BaseRenderer from './base';
 
-export const NUM_GBUFFERS = 4;
+export const NUM_GBUFFERS = 2;
 
 export default class ClusteredRenderer extends BaseRenderer {
   constructor(xSlices, ySlices, zSlices) {
@@ -29,7 +29,7 @@ export default class ClusteredRenderer extends BaseRenderer {
       numLights: NUM_LIGHTS,
       numGBuffers: NUM_GBUFFERS,
     }), {
-      uniforms: ['u_gbuffers[0]', 'u_gbuffers[1]', 'u_gbuffers[2]', 'u_gbuffers[3]',
+      uniforms: ['u_gbuffers[0]', 'u_gbuffers[1]',
       'u_lightbuffer', 'u_clusterbuffer',
       'u_xSlices', 'u_ySlices', 'u_zSlices', 'u_maxLightsPerCluster',
       'u_screenH', 'u_screenW', 'u_viewMat', 'u_camNear', 'u_camFar'
@@ -179,7 +179,7 @@ export default class ClusteredRenderer extends BaseRenderer {
     gl.uniform1f(this._progShade.u_camFar, canvas.far);
 
     // Bind g-buffers
-    const firstGBufferBinding = 3; // You may have to change this if you use other texture slots
+    const firstGBufferBinding = 4; // You may have to change this if you use other texture slots
     for (let i = 0; i < NUM_GBUFFERS; i++) {
       gl.activeTexture(gl[`TEXTURE${i + firstGBufferBinding}`]);
       gl.bindTexture(gl.TEXTURE_2D, this._gbuffers[i]);

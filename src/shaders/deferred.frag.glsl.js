@@ -71,11 +71,11 @@ export default function(params) {
     // TODO: extract data from g buffers and do lighting
     vec4 gb0 = texture2D(u_gbuffers[0], v_uv);
     vec4 gb1 = texture2D(u_gbuffers[1], v_uv);
-    vec4 gb2 = texture2D(u_gbuffers[2], v_uv);
 
     vec3 position = gb0.rgb;
-    vec3 albedo = gb2.rgb;
-    vec3 normal = gb1.rgb;
+    vec3 albedo = gb1.rgb;
+    float normZ = sqrt(1.0 - gb0[3]*gb0[3] - gb1[3]*gb1[3]);
+    vec3 normal = normalize(vec3(gb0[3], gb1[3], normZ));
 
     // Determine the cluster for this fragment
     vec4 pos = u_viewMat * vec4(position.xyz, 1.0);
@@ -104,10 +104,17 @@ export default function(params) {
       float lightDistance = distance(light.position, position);
       vec3 L = (light.position - position) / lightDistance;
 
+      // Diffuse term
       float lightIntensity = cubicGaussian(2.0 * lightDistance / light.radius);
       float lambertTerm = max(dot(L, normal), 0.0);
 
+      // Specular term (Blinn-Phong)
+      //vec3 viewVector = normalize(vec3(0.0) - vec3(pos.xyz));
+      //vec3 halfVector = normalize(L + viewVector);
+      //float blinnPhongTerm = pow(max(dot(normalize(normal), halfVector), 0.0), 8.0); 
+
       fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
+      //fragColor += albedo * (lambertTerm + blinnPhongTerm) * light.color * vec3(lightIntensity);
     }
 
     const vec3 ambientLight = vec3(0.025);

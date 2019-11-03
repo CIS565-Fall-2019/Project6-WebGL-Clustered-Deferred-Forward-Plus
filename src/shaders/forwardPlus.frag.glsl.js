@@ -161,6 +161,9 @@ export default function(params) {
       
       int dataidx = int(float(i) - 4.0 * floor(float(i)/4.0));
       //float light_index = lightData[int(dataidx)]; // WTF GLSL
+      // So you can't index in with non-constant data, and you 
+      // cant form const data from nonconst data
+      // WHAT?!
       float light_index = 0.0;
       if(dataidx == 0) {
         light_index = lightData[0];

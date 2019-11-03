@@ -11,6 +11,12 @@ export default function(params) {
 
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
+  uniform mat4 u_viewProjectionMatrix;
+  uniform mat4 u_viewMatrix;
+  uniform float u_S;
+  uniform float u_A;
+  uniform float u_P;
+  uniform float u_Q;
 
   varying vec3 v_position;
   varying vec3 v_normal;
@@ -79,10 +85,45 @@ export default function(params) {
     vec3 normap = texture2D(u_normap, v_uv).xyz;
     vec3 normal = applyNormalMap(v_normal, normap);
 
+    int xS = int(${params.xSlice});
+    int yS = int(${params.ySlice});
+    int zS = int(${params.zSlice});
+
     vec3 fragColor = vec3(0.0);
 
-    for (int i = 0; i < ${params.numLights}; ++i) {
-      Light light = UnpackLight(i);
+    // Find out which cluster we're in
+    vec4 camPos = u_viewMatrix * vec4(v_position, 1.0);
+    float wDiv = camPos.z;
+    vec3 clust = vec3(floor((camPos.x * u_S / u_A) / wDiv * float(xS)),       
+                    floor(camPos.y * u_S / wDiv * float(yS)),                  
+                    floor((camPos.z * u_P + camPos.w * u_Q) / wDiv * float(zS)));
+    /*vec4 fragPos = u_viewProjectionMatrix * vec4(v_position, 1.0);
+    fragPos /= fragPos.w;
+    vec3 clust = (vec3(fragPos) + 1.0) * 0.5;
+    clust = vec3(floor(clust.x * float(${params.xSlice})), 
+                 floor(clust.y * float(${params.ySlice})), 
+                 floor(clust.z * float(${params.zSlice})));*/
+    
+    // Cluster data
+    int idx = int(clust.x + clust.y * float(${params.xSlice}) + 
+                  clust.z * float(${params.xSlice}) * float(${params.ySlice}));
+    int count = int(float(${params.xSlice}) * float(${params.ySlice}) * float(${params.zSlice}));
+    int textureHeight = int(ceil((float(${params.maxNumLights}) + 1.0) / 4.0));
+
+    // Similar to UnpackLight, but cluster indices instead of lights
+    float u = float(idx + 1) / float(count + 1);
+    float numLts = texture2D(u_clusterbuffer, vec2(u, 0.0)).x;
+    // Maybe Extract Float instead
+    //float numLts = ExtractFloat(u_clusterbuffer, count, int(${params.numLights}) + 1, idx, 0);
+
+    for (int i = 1; i <= int(${params.numLights}); ++i) {
+      if (i >= int(numLts)) {
+        break;
+      }
+      // Extract the float stored at each light index, offput by 1 because of how we stored numLights
+      int l = int(ExtractFloat(u_clusterbuffer, count, textureHeight + 1, idx, i));
+      
+      Light light = UnpackLight(l);
       float lightDistance = distance(light.position, v_position);
       vec3 L = (light.position - v_position) / lightDistance;
 
@@ -91,6 +132,8 @@ export default function(params) {
 
       fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
     }
+
+
 
     const vec3 ambientLight = vec3(0.025);
     fragColor += albedo * ambientLight;

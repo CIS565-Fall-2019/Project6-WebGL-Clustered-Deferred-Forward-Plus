@@ -15,6 +15,67 @@ function GetFrustrumHeight(camera, depth) {
   return GetFrustrumWidth(camera, depth) / camera.aspect;
 }
 
+class SphereRayIntersectionTest {
+  // Equation from 
+  // http://paulbourke.net/geometry/circlesphere/
+
+  // sphere: THREE.Sphere
+  // point1: Three.Vector3, point 1 of line
+  // point2: Three.Vector3, point 2 of line
+  constructor(sphere, p1, p2) {
+    // Init values
+    this._intersects = false;
+    this._i1 = new Vector3(0, 0, 0);
+    this._i2 = new Vector3(0, 0, 0);
+
+    // Extract values
+    let lx = p2.x - p1.x;
+    let ly = p2.x - p1.x;
+    let lz = p2.x - p1.x;
+    let sc = sphere.center;
+    let sr = sphere.radius;
+
+    // Calculate componenrts of quadratic equation
+    let a = lx*lx + ly*ly + lz*lz;
+    let b = 2 * (lx*(p1.x - sc.x) + ly*(p1.y - sc.y) + lz*(p1.z-sc.z));
+    let c = sc.x*sc.x + sc.y*sc.y + sc.z*sc.z 
+            + p1.x*p1.x + p1.y*p1.y + p1.z*p1.z
+            - 2 * (sc.x*p1.x + sc.y*p1.y + sc.z*p1.z)
+            - sr*sr;
+
+    // Check for a solution
+    let inner_quadratic = b*b - 4*a*c;
+    if(inner_quadratic <= 0) {
+      // Already set to failure
+    }
+    else {
+      // A solution exists, solve the quadratic
+      this._intersects = true;
+
+      let q1 = (-b + Math.sqrt(inner_quadratic)) / (2*a);
+      let q2 = (-b - Math.sqrt(inner_quadratic)) / (2*a);
+
+      // Have to use crazy functions because JS
+      //this._i1 = (p1 + q1*(p2 - p1));
+      let tmp = new Vector3();
+      this._i1.copy(tmp.copy(p2).sub(p1).multiplyScalar(q1).add(p1));
+      this._i2.copy(tmp.copy(p2).sub(p1).multiplyScalar(q2).add(p1));
+    }
+  }
+
+  valid() {
+    return this._intersects;
+  }
+
+  getPoint1() {
+    return this._i1;
+  }
+
+  getPoint2() {
+    return this._i2;
+  }
+}
+
 export default class BaseRenderer {
   constructor(xSlices, ySlices, zSlices) {
     // Create a texture to store cluster data. Each cluster stores the number of lights followed by the light indices

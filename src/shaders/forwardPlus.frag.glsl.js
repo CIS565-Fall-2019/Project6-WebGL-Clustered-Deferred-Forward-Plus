@@ -81,11 +81,14 @@ export default function(params) {
 
     // Armed with the above, get x, y, and z
     // IDK why true_pos wont work.
-    int x = int(gl_FragCoord.x * u_x_slices / width);
-    int y = int(gl_FragCoord.y * u_y_slices / height);
-    int z = int(gl_FragCoord.z * u_z_slices / depth);
+    int x = int(true_pos.x * u_x_slices / width);
+    int y = int(true_pos.y * u_y_slices / height);
+    // I got help on figuring this one out. Not sure how it works still.
+    float z = log(-zDepth)
+            * (u_z_slices / log(u_camera_far / u_camera_near)) 
+            - ((u_z_slices * log(u_camera_near)) / log(u_camera_far / u_camera_near));
     
-    return x + y * int(u_x_slices) + z * int(u_x_slices) * int(u_y_slices);
+    return x + y * int(u_x_slices) + int(z) * int(u_x_slices) * int(u_y_slices);
   }
 
   Light UnpackLight(int index) {
@@ -140,8 +143,9 @@ export default function(params) {
       }
 
       // Get the light data from clusterBuffer
-      float lid = float((i / 4) + 1) / (clusterBufferStep + 1.0);
+      float lid = (float(i) / 101.0) / 4.0;
       vec4 lightData = texture2D(u_clusterbuffer, vec2(tid, lid));
+      
       int dataidx = int(float(i) - 4.0 * floor(float(i)/4.0));
       //float light_index = lightData[int(dataidx)]; // WTF GLSL
       float light_index = 0.0;

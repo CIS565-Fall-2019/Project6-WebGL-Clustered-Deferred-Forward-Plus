@@ -59,6 +59,7 @@ export default function(params) {
     }
   }
 
+// https://docs.unity3d.com/Manual/FrustumSizeAtDistance.html
   float GetFrustrumWidth(float depth) {
     float PI = 3.1415926535897932384626433832795;
     return 2.0 * depth * tan(u_camera_fov * 0.5 * (PI / float(180)));
@@ -73,16 +74,15 @@ export default function(params) {
     // Position is in View space, so it relates directly to our view stuff
     // Need some bounds for the view frustrum
     vec4 view_pos = u_view_matrix * vec4(position, 1.0);
-    vec3 true_pos = vec3(view_pos);
-    float zDepth = true_pos.z;
+    float zDepth = view_pos.z;
     float width  = GetFrustrumWidth(zDepth);
     float height = GetFrustrumHeight(zDepth);
     float depth  = u_camera_far - u_camera_near;
 
     // Armed with the above, get x, y, and z
     // IDK why true_pos wont work.
-    int x = int(true_pos.x * u_x_slices / width);
-    int y = int(true_pos.y * u_y_slices / height);
+    int x = int((view_pos.x + (width/2.0)) / width * u_x_slices);
+    int y = int((view_pos.y + (height/2.0)) / height * u_y_slices);
     // I got help on figuring this one out. Not sure how it works still.
     float z = log(-zDepth)
             * (u_z_slices / log(u_camera_far / u_camera_near)) 
@@ -103,8 +103,8 @@ export default function(params) {
 
     // Armed with the above, get x, y, and z
     // IDK why true_pos wont work.
-    int x = int(view_pos.x * u_x_slices / width);
-    int y = int(view_pos.y * u_y_slices / height);
+    int x = int((view_pos.x + (width/2.0)) / width * u_x_slices);
+    int y = int((view_pos.y + (height/2.0)) / height * u_y_slices);
     // I got help on figuring this one out. Not sure how it works still.
     float z = log(-zDepth)
             * (u_z_slices / log(u_camera_far / u_camera_near)) 

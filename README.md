@@ -14,7 +14,7 @@ WebGL Clustered and Forward+ Shading
 
 ### Demo GIF
 
-![](img/webGLVideo.GIF)
+![](img/webglVideo.gif)
 
 ## Clustered and Deferred Shading in WebGL
 

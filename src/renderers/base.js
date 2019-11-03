@@ -7,67 +7,6 @@ import { sqrDist } from 'gl-matrix/src/gl-matrix/vec3';
 
 export const MAX_LIGHTS_PER_CLUSTER = 100;
 
-class SphereRayIntersectionTest {
-  // Equation from 
-  // http://paulbourke.net/geometry/circlesphere/
-
-  // sphere: THREE.Sphere
-  // point1: Three.Vector3, point 1 of line
-  // point2: Three.Vector3, point 2 of line
-  constructor(sphere, p1, p2) {
-    // Init values
-    this._intersects = false;
-    this._i1 = new Vector3(0, 0, 0);
-    this._i2 = new Vector3(0, 0, 0);
-
-    // Extract values
-    let lx = p2.x - p1.x;
-    let ly = p2.x - p1.x;
-    let lz = p2.x - p1.x;
-    let sc = sphere.center;
-    let sr = sphere.radius;
-
-    // Calculate componenrts of quadratic equation
-    let a = lx*lx + ly*ly + lz*lz;
-    let b = 2 * (lx*(p1.x - sc.x) + ly*(p1.y - sc.y) + lz*(p1.z-sc.z));
-    let c = sc.x*sc.x + sc.y*sc.y + sc.z*sc.z 
-            + p1.x*p1.x + p1.y*p1.y + p1.z*p1.z
-            - 2 * (sc.x*p1.x + sc.y*p1.y + sc.z*p1.z)
-            - sr*sr;
-
-    // Check for a solution
-    let inner_quadratic = b*b - 4*a*c;
-    if(inner_quadratic <= 0) {
-      // Already set to failure
-    }
-    else {
-      // A solution exists, solve the quadratic
-      this._intersects = true;
-
-      let q1 = (-b + Math.sqrt(inner_quadratic)) / (2*a);
-      let q2 = (-b - Math.sqrt(inner_quadratic)) / (2*a);
-
-      // Have to use crazy functions because JS
-      //this._i1 = (p1 + q1*(p2 - p1));
-      let tmp = new Vector3();
-      this._i1.copy(tmp.copy(p2).sub(p1).multiplyScalar(q1).add(p1));
-      this._i2.copy(tmp.copy(p2).sub(p1).multiplyScalar(q2).add(p1));
-    }
-  }
-
-  valid() {
-    return this._intersects;
-  }
-
-  getPoint1() {
-    return this._i1;
-  }
-
-  getPoint2() {
-    return this._i2;
-  }
-}
-
 function GetFrustrumWidth(camera, depth) {
   return 2 * depth * Math.tan(camera.fov * 0.5 * (Math.PI / 180.0));
 }
@@ -124,70 +63,69 @@ export default class BaseRenderer {
     // Is dependent on distance.
     // https://docs.unity3d.com/Manual/FrustumSizeAtDistance.html
 
-    // For each light we have...
+    // preallocate
+    let lightSphere = new Sphere();
+
+    // Transform light information now to avoid having to reach out far into memory for it
+    var localLights = [];
     for (let lightIdx = 0; lightIdx < NUM_LIGHTS; lightIdx++) {
-      // Get center + radius, extract from scene struct to three.js Sphere
-      let lightSphere = new Sphere(
-        new Vector3(
-          scene.lights[lightIdx].position[0],
-          scene.lights[lightIdx].position[1],
-          scene.lights[lightIdx].position[2]
-        ),
-        scene.lights[lightIdx].radius);
+      var l = scene.lights[lightIdx].position;
+      localLights[lightIdx] = vec4.create();
+      vec4.set(localLights[lightIdx], l[0], l[1], l[2], 1);
+      vec4.transformMat4(localLights[lightIdx], localLights[lightIdx], viewMatrix);
+      localLights[lightIdx][3] = scene.lights[lightIdx].radius;
+    }
 
-      // Apply transform
-      let tm = new Matrix4;
-      tm.fromArray(viewMatrix);
-      lightSphere.applyMatrix4(tm);
+    // Run it through the segments and mark the ones that matter
+    // Instead of worrying about volume, we look at projections
+    for (let z = 0; z < this._zSlices; ++z) {
+      // Check for intersection between plane defined by this z depth and sphere
+      // If sphere, does not intersect the z plane, then continue
+      //let zDepth = -1 * (zMin + zDelta * z);
+      let z0 = -zMin * Math.pow((zMax / zMin), ((z+1) / this._zSlices));
+      let z1 = -zMin * Math.pow((zMax / zMin), ((z) / this._zSlices));
+      let zDepth = -z0;
 
-      // Run it through the segments and mark the ones that matter
-      // Instead of worrying about volume, we look at projections
-      for (let z = 0; z < this._zSlices; ++z) {
-        // Check for intersection between plane defined by this z depth and sphere
-        // If sphere, does not intersect the z plane, then continue
-        //let zDepth = -1 * (zMin + zDelta * z);
-        let z0 = -zMin * Math.pow((zMax / zMin), ((z+1) / this._zSlices));
-        let z1 = -zMin * Math.pow((zMax / zMin), ((z) / this._zSlices));
-        let zDepth = -z0;
+      // Get width and height for xy respectively
+      // Is dependent on distance.
+      // https://docs.unity3d.com/Manual/FrustumSizeAtDistance.html
+      let width = GetFrustrumWidth(camera, zDepth);
+      let height = GetFrustrumHeight(camera, zDepth);
+      let minX = -1.0 * (width/2.0);
+      let maxX = (width/2.0);
+      let minY = -1.0 * (height/2.0);
+      let maxY = height/2.0;
+      let xDelta = (maxX - minX) / this._xSlices;
+      let yDelta = (maxY - minY) / this._ySlices;
 
-        if((lightSphere.center.z - lightSphere.radius) > z1) {
-          // Sphere doesnt break past minimum z
-          continue;
-        }
-        if((lightSphere.center.z + lightSphere.radius) < z0) {
-          // Sphere is beyond this z
-          continue;
-        }
+      // Check each Y line for intersections
+      for (let y = 0; y < this._ySlices; ++y) {
+        // Will form a box using xyz from bottom left to top right
+        // this is defined by the box formed by the cluster
+        let y0 = minY + y * yDelta;
+        let y1 = minY + (y+1) * yDelta;
 
-        // Get width and height for xy respectively
-        // Is dependent on distance.
-        // https://docs.unity3d.com/Manual/FrustumSizeAtDistance.html
-        let width = GetFrustrumWidth(camera, zDepth);
-        let height = GetFrustrumHeight(camera, zDepth);
-        let minX = -1.0 * (width/2.0);
-        let maxX = (width/2.0);
-        let minY = -1.0 * (height/2.0);
-        let maxY = height/2.0;
-        let xDelta = (maxX - minX) / this._xSlices;
-        let yDelta = (maxY - minY) / this._ySlices;
+        for (let x = 0; x < this._xSlices; ++x) {
+          let x0 = minX + x * xDelta;
+          let x1 = minX + (x+1) * xDelta;
 
-        // Check each Y line for intersections
-        for (let y = 0; y < this._ySlices; ++y) {
-          // Will form a box using xyz from bottom left to top right
-          // this is defined by the box formed by the cluster
-          let y0 = minY + y * yDelta;
-          let y1 = minY + (y+1) * yDelta;
+          // z0 and z1 calculated above, uses log instead of linear
+          // Create box to test against sphere intersection
+          let bound = new Box3(
+            new Vector3(x0, y0, z0),
+            new Vector3(x1, y1, z1)
+          );
 
-          for (let x = 0; x < this._xSlices; ++x) {
-            let x0 = minX + x * xDelta;
-            let x1 = minX + (x+1) * xDelta;
-
-            // z0 and z1 calculated above, uses log instead of linear
-            // Create box to test against sphere intersection
-            let bound = new Box3(
-              new Vector3(x0, y0, z0),
-              new Vector3(x1, y1, z1)
-            );
+          // For each light we have...
+          for (let lightIdx = 0; lightIdx < NUM_LIGHTS; lightIdx++) {
+            // Get center + radius, extract from scene struct to three.js Sphere
+            lightSphere.set(
+                new Vector3(
+                    localLights[lightIdx][0],
+                    localLights[lightIdx][1],
+                    localLights[lightIdx][2]
+                ),
+                localLights[lightIdx][3]);
 
             // Check if the lightsphere abd box intersect
             if(lightSphere.intersectsBox(bound)) {
@@ -214,9 +152,9 @@ export default class BaseRenderer {
               }
             }
           }
-
-          // thank u, next
         }
+
+        // thank u, next
       }
     }
 

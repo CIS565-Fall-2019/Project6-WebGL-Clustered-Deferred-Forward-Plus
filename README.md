@@ -34,7 +34,7 @@ In z direction (in camera space. the same in following discussion), we can evenl
 If we simply calculate the tangent line and take the area in between of these two line as the overlapping range, we may find some lights disappear. The reason is that for each pair of tangent lines there are three possible cases. We have to calculate the dot product between the tangent and the light direction to know which case is the right one. 
 
 <p align="center">
-    <img src = img/tangent.png>
+    <img src = img/tangents.png>
 <p
 
 #### Deferred Shading

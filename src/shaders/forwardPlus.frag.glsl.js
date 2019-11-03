@@ -73,19 +73,10 @@ export default function(params) {
     // Position is in View space, so it relates directly to our view stuff
     // Need some bounds for the view frustrum
     vec4 view_pos = u_view_matrix * vec4(position, 1.0);
-
-    // I got help on figuring this one out. Not sure how it works still.
-    // But we choose to define the z cluster logarithmically
-    // So far away clusters are larger. And z depth dictates the width/height
-    // of the frustrum
-    float z = log(-view_pos.z) 
-            * (u_z_slices / log(u_camera_far/u_camera_near)) 
-            - ((u_z_slices * log(u_camera_near)) / log(u_camera_far / u_camera_near));
+    float zDepth = -view_pos.z;
 
     // Just like in base.js
-    float zMin = u_camera_near;
-    float zMax = u_camera_far;
-    float zDepth = zMin * pow((zMax / zMin), ((float(z) + 1.0) / float(u_z_slices)));;
+    //float zDepth = zMin * pow((zMax / zMin), ((z + 1.0) / float(u_z_slices)));;
     float width  = GetFrustrumWidth(zDepth);
     float height = GetFrustrumHeight(zDepth);
 
@@ -93,6 +84,9 @@ export default function(params) {
     // IDK why true_pos wont work.
     int x = int(((view_pos.x + (width/2.0)) / width) * u_x_slices);
     int y = int(((view_pos.y + (height/2.0)) / height) * u_y_slices);
+    float z = log(-view_pos.z) 
+            * (u_z_slices / log(u_camera_far/u_camera_near)) 
+            - ((u_z_slices * log(u_camera_near)) / log(u_camera_far / u_camera_near));
  
     return vec3(x, y, int(z));
   }

@@ -79,9 +79,10 @@ export default class BaseRenderer {
     // Run it through the segments and mark the ones that matter
     // Instead of worrying about volume, we look at projections
     for (let z = 0; z < this._zSlices; ++z) {
-      // Check for intersection between plane defined by this z depth and sphere
-      // If sphere, does not intersect the z plane, then continue
-      //let zDepth = -1 * (zMin + zDelta * z);
+      // Set Z to a logarithm,ic value. Hints taken from Avalanche.
+      // By setting this up as a log, we avoid having a ton of lights in the first
+      // cluster, since the depth is huge (2000).
+      // Otherwise the first cluster is 0 to -66 and encompasses most of the scene.
       let z0 = -zMin * Math.pow((zMax / zMin), ((z+1) / this._zSlices));
       let z1 = -zMin * Math.pow((zMax / zMin), ((z) / this._zSlices));
       let zDepth = -z0;
@@ -90,7 +91,7 @@ export default class BaseRenderer {
       // Is dependent on distance.
       // https://docs.unity3d.com/Manual/FrustumSizeAtDistance.html
       let width = GetFrustrumWidth(camera, zDepth);
-      let height = GetFrustrumHeight(camera, zDepth);
+      let height = width / camera.aspect;
       let minX = -1.0 * (width/2.0);
       let maxX = (width/2.0);
       let minY = -1.0 * (height/2.0);

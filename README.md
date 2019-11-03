@@ -31,14 +31,14 @@ The main challenge of this method is how to determine the intersection between a
 
 In z direction (in camera space. the same in following discussion), we can evenly divide the space and it's easy to find the overlapping range by checking the nearest and farest point on the sphere. But in x/y direction, we need to find the tangent line through the origin (camera) on xz/yz plane. This is equivalent to sovling a quadratic function which has analytic solution.
 
-If we simply calculate the tangent line and take the area in between of these two line as the overlapping range, we may find some lights disappear. The reason is for each pair of tangent line there are three possible cases. We have to calculate the dot product between the tangent and the light direction to know which case is the right one. 
+If we simply calculate the tangent line and take the area in between of these two line as the overlapping range, we may find some lights disappear. The reason is that for each pair of tangent lines there are three possible cases. We have to calculate the dot product between the tangent and the light direction to know which case is the right one. 
 
 <p align="center">
     <img src = img/tangent.png>
 <p
 
 #### Deferred Shading
-This is a technique to decoupling lights from geometry. In the first pass we generate textures recording normal, albedo and other information we need to do shading. In the second pass we calculate the color for each pixel by looping the lights and using the textures generated before.
+This is a technique to decoupling lights from geometry. In the first pass we generate textures that store normal, albedo and other information we need to do shading. In the second pass we calculate the color for each pixel by looping the lights and using the textures generated before.
 
 ## Performance Analysis
 #### Compare the shading methods
@@ -60,7 +60,7 @@ We are able to optimize the original deferred shading by several steps. First we
     <img src = img/plot4.png>
 <p
 
-After implementing Blinn-Phong Shading, the performance becomes worse a little bit beacause of the extra compuatation for each pixel. The figure above shows the performance of Blinn-Phong and Lambert shading as number of light increasing, with or without the optimization described in the last section.
+After implementing Blinn-Phong Shading, the performance becomes worse a little bit beacause of the extra compuatation of specular color. The figure above shows the performance of Blinn-Phong and Lambert shading as number of light increasing, with or without the optimization described in the last section.
 
 ## Credits
 

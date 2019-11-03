@@ -27,7 +27,7 @@ The main challenge of this method is how to determine the intersection between a
 
 <p align="center">
     <img src = img/ClusteredShading.png>
-<p
+<p\>
 
 In z direction (in camera space. the same in following discussion), we can evenly divide the space and it's easy to find the overlapping range by checking the nearest and farest point on the sphere. But in x/y direction, we need to find the tangent line through the origin (camera) on xz/yz plane. This is equivalent to sovling a quadratic function which has analytic solution.
 
@@ -35,7 +35,7 @@ If we simply calculate the tangent line and take the area in between of these tw
 
 <p align="center">
     <img src = img/tangents.png>
-<p
+<p\>
 
 #### Deferred Shading
 This is a technique to decoupling lights from geometry. In the first pass we generate textures that store normal, albedo and other information we need to do shading. In the second pass we calculate the color for each pixel by looping the lights and using the textures generated before.
@@ -43,22 +43,22 @@ This is a technique to decoupling lights from geometry. In the first pass we gen
 ## Performance Analysis
 #### Compare the shading methods
 <p align="center">
-    <img src = img/plot1.png>
-<p
+        <img src = img/plot1.png width="640" height="360">
+<p\>
 
 The figure above shows the performance of the three shading methods as increasing number of lights. Clusterred shading improves performance a lot compared to the basic forward shading, and deffered shading is able to continue optimizing the rendering pipeline.
 
 #### Optimize Deferred Shading
 <p align="center">
-    <img src = img/Plot3.png>
-<p
+    <img src = img/Plot3.png width="450" height="400">
+<p\>
 
 We are able to optimize the original deferred shading by several steps. First we can use "Spheremap Transform" to encode the normals into `vec2`s. This method introduces small error to the final result while requires a little extra computation resources. Now we only need two textures (each pixel is `vec4`) to record the position, normal and albedo. The time per frame of clustered + deferred shading when 400 lights exsit decreases from 171ms to 141ms by applying this optimization.Besides, position texture also has redundant data since we can reconstruct the position using only the depth information. Now the totol storage size we need for each pixel is 6(1 for position, 2 for normal, 3 for albedo). This leads to the final arrangement of two textures in RGB format (instead of RGBA). We can see the performance almost keeps the same after making this change. The reason might be the extra computation for reconstructing the position counterweigh the optimization of less data transmission.
 
 #### Blinn-Phong Shading
 <p align="center">
-    <img src = img/Plot4.png>
-<p
+    <img src = img/Plot4.png width="450" height="400">
+<p\>
 
 After implementing Blinn-Phong Shading, the performance becomes worse a little bit beacause of the extra compuatation of specular color. The figure above shows the performance of Blinn-Phong and Lambert shading as number of light increasing, with or without the optimization described in the last section.
 

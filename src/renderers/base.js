@@ -145,6 +145,7 @@ export default class BaseRenderer {
       for (let z = 0; z < this._zSlices; ++z) {
         // Check for intersection between plane defined by this z depth and sphere
         // If sphere, does not intersect the z plane, then continue
+        let zDepth = -1 * (zMin + zDelta * z);
         let zPlane = new Plane(new Vector3(0, 0, 1), zDepth);
         if(!lightSphere.intersectsPlane(zPlane)) {
           continue;

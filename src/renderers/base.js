@@ -146,14 +146,16 @@ export default class BaseRenderer {
         // Check for intersection between plane defined by this z depth and sphere
         // If sphere, does not intersect the z plane, then continue
         //let zDepth = -1 * (zMin + zDelta * z);
-        let z0 = -zMin * Math.pow((zMax / zMin), (z / this._zSlices));
-        let z1 = -zMin * Math.pow((zMax / zMin), ((z+1) / this._zSlices));
+        let z0 = -zMin * Math.pow((zMax / zMin), ((z+1) / this._zSlices));
+        let z1 = -zMin * Math.pow((zMax / zMin), ((z) / this._zSlices));
         let zDepth = -z0;
-        let zPlane0 = new Plane(new Vector3(0, 0, 1), -z0);
-        let zPlane1 = new Plane(new Vector3(0, 0, 1), -z1);
 
-        // check if the lights intersect our z plane at all
-        if(!lightSphere.intersectsPlane(zPlane0) && !lightSphere.intersectsPlane(zPlane1)) {
+        if((lightSphere.center.z - lightSphere.radius) > z1) {
+          // Sphere doesnt break past minimum z
+          continue;
+        }
+        if((lightSphere.center.z + lightSphere.radius) < z0) {
+          // Sphere is beyond this z
           continue;
         }
 
@@ -210,7 +212,6 @@ export default class BaseRenderer {
                 this._clusterTexture.buffer[base + offset]   = lightIdx;
                 this._clusterTexture.buffer[clusterLightIdx] = currLights;
               }
-
             }
           }
 

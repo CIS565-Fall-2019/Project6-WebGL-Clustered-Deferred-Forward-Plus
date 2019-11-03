@@ -50,14 +50,14 @@ The figure above shows the performance of the three shading methods as increasin
 
 #### Optimize Deferred Shading
 <p align="center">
-    <img src = img/plot3.png>
+    <img src = img/Plot3.png>
 <p
 
 We are able to optimize the original deferred shading by several steps. First we can use "Spheremap Transform" to encode the normals into `vec2`s. This method introduces small error to the final result while requires a little extra computation resources. Now we only need two textures (each pixel is `vec4`) to record the position, normal and albedo. The time per frame of clustered + deferred shading when 400 lights exsit decreases from 171ms to 141ms by applying this optimization.Besides, position texture also has redundant data since we can reconstruct the position using only the depth information. Now the totol storage size we need for each pixel is 6(1 for position, 2 for normal, 3 for albedo). This leads to the final arrangement of two textures in RGB format (instead of RGBA). We can see the performance almost keeps the same after making this change. The reason might be the extra computation for reconstructing the position counterweigh the optimization of less data transmission.
 
 #### Blinn-Phong Shading
 <p align="center">
-    <img src = img/plot4.png>
+    <img src = img/Plot4.png>
 <p
 
 After implementing Blinn-Phong Shading, the performance becomes worse a little bit beacause of the extra compuatation of specular color. The figure above shows the performance of Blinn-Phong and Lambert shading as number of light increasing, with or without the optimization described in the last section.

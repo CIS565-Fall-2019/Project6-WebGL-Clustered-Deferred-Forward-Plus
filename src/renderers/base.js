@@ -1,7 +1,7 @@
 import TextureBuffer from './textureBuffer';
 import { vec4 } from 'gl-matrix';
 import { NUM_LIGHTS } from '../scene';
-import { Sphere, Plane, Vector3, Matrix4, Box3 } from 'three';
+import { Sphere, Plane, Vector3, Matrix4, Box3, Vector4 } from 'three';
 import { SSL_OP_PKCS1_CHECK_2 } from 'constants';
 import { sqrDist } from 'gl-matrix/src/gl-matrix/vec3';
 
@@ -149,9 +149,11 @@ export default class BaseRenderer {
         let z0 = -zMin * Math.pow((zMax / zMin), (z / this._zSlices));
         let z1 = -zMin * Math.pow((zMax / zMin), ((z+1) / this._zSlices));
         let zDepth = -z0;
-        let zPlane = new Plane(new Vector3(0, 0, 1), zDepth);
+        let zPlane0 = new Plane(new Vector3(0, 0, 1), -z0);
+        let zPlane1 = new Plane(new Vector3(0, 0, 1), -z1);
 
-        if(!lightSphere.intersectsPlane(zPlane)) {
+        // check if the lights intersect our z plane at all
+        if(!lightSphere.intersectsPlane(zPlane0) && !lightSphere.intersectsPlane(zPlane1)) {
           continue;
         }
 
@@ -169,71 +171,6 @@ export default class BaseRenderer {
 
         // Check each Y line for intersections
         for (let y = 0; y < this._ySlices; ++y) {
-          var xLeft = -1;
-          var xRight = -1; 
-
-          // At the intersection of the Zplane and the XY plane we have lines at each 
-          // ySlice. We can calculate a line from (x_min, yn, z) to (x_max, yn, z) for 
-          // each n (that is, _yslice). If a line intersects, find the intersection points.
-          // From those points, we can find which box defined by _xSlice contains the leftmost
-          // intersection and again for the rightmost intersection.
-
-          // Intersections of a line and sphere are defined by the quadratic equation
-          // Specifically the result of ( b*b - 4*a*c)
-          // If < 0, no intersect
-          // If == 0, tangential (we will say this does not intersect since light affect only within the bound)
-          // If > 0, intersections at two points. defined by quadratic equation
-          /*
-           * NOTE: Ditching line intersection in favor of box intersection
-           */
-          // let thisY = minY + (yDelta * y); 
-          // let p1 = new Vector3(minX, thisY, zDepth);
-          // let p2 = new Vector3(maxX, thisY, zDepth);
-          // let intersection = new SphereRayIntersectionTest(lightSphere, p1, p2);
-
-          // if(intersection.valid()) {
-          //   // Left scan on X
-          //   for (let x = 0; x < this._xSlices; ++x) {
-          //     if(minX + (xDelta * x) > intersection.getPoint1().x) {
-          //       xLeft = x - 1;
-          //       break;
-          //     }
-          //   }
-
-          //   // Right scan on X
-          //   for (let x = this._xSlices - 1; x >= xLeft; --x) {
-          //     if(minX + (xDelta * x) < intersection.getPoint2().x) {
-          //       xRight = x;
-          //       break;
-          //     }
-          //   }
-
-          //   // Fill in the cluster texture with our intersections
-          //   for(let x = xLeft; x <= xRight; x++) {
-          //     let clusterIdx = x + y * this._xSlices + z * this._xSlices * this._ySlices;
-          //     let clusterLightIdx = this._clusterTexture.bufferIndex(clusterIdx, 0);
-
-          //     let currLights = this._clusterTexture.buffer[clusterLightIdx];
-          //     if(currLights < MAX_LIGHTS_PER_CLUSTER) {
-          //       // We good, increment our light count.
-          //       currLights++;
-
-          //       // Locate the correct part of the pixel to populate
-          //       let pixel = Math.floor(currLights / 4);
-
-          //       // We have to do this because of the way that  the buffers are defined
-          //       // Each _clusterBuffer contains many pixels that are really 4 floats
-          //       // So we are abusing that fact to carry over non-rgba data
-          //       // Why doesn't webGL have NORMAL DATA? Because whoever wrote it is dumb.
-          //       let base = this._clusterTexture.bufferIndex(clusterIdx, pixel);
-          //       let offset = currLights - pixel * 4;
-
-          //       this._clusterTexture.buffer[base + offset]   = lightIdx;
-          //       this._clusterTexture.buffer[clusterLightIdx] = currLights;
-          //     }
-          //   }
-          // }
-
           // Will form a box using xyz from bottom left to top right
           // this is defined by the box formed by the cluster
           let y0 = minY + y * yDelta;
@@ -245,7 +182,10 @@ export default class BaseRenderer {
 
             // z0 and z1 calculated above, uses log instead of linear
             // Create box to test against sphere intersection
-            let bound = new Box3(new Vector3(x0, y0, z0), new Vector3(x1, y1, z1));
+            let bound = new Box3(
+              new Vector3(x0, y0, z0),
+              new Vector3(x1, y1, z1)
+            );
 
             // Check if the lightsphere abd box intersect
             if(lightSphere.intersectsBox(bound)) {
@@ -265,7 +205,7 @@ export default class BaseRenderer {
                 // So we are abusing that fact to carry over non-rgba data
                 // Why doesn't webGL have NORMAL DATA? Because whoever wrote it is dumb.
                 let base = this._clusterTexture.bufferIndex(clusterIdx, pixel);
-                let offset = currLights - pixel * 4;
+                let offset = currLights % 4;
 
                 this._clusterTexture.buffer[base + offset]   = lightIdx;
                 this._clusterTexture.buffer[clusterLightIdx] = currLights;

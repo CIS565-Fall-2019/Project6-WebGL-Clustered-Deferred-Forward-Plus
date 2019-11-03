@@ -77,19 +77,27 @@ export default function(params) {
     // TODO: extract data from g buffers and do lighting
     //gb0 is color
     vec4 gb0 = texture2D(u_gbuffers[0], v_uv);
+    vec3 v_position = gb0.xyz;
     //gb1 is position
     vec4 gb1 = texture2D(u_gbuffers[1], v_uv);
-    //gb2 is normal
-    vec4 gb2 = texture2D(u_gbuffers[2], v_uv);
-
-
-    //borrow name from foward plus becasue the other logic is the same
     vec3 albedo = gb1.rgb;
-    vec3 v_position = gb0.xyz;
-    vec3 normal = gb2.xyz;
-    //vec3 normal = normalize(vec3(0, 1.0, 0));
 
-        //convert v_position from world to camera -- using view matrix
+    //not optimized
+    //gb2 is normal
+    //vec4 gb2 = texture2D(u_gbuffers[2], v_uv);
+    //vec3 normal = gb2.xyz;
+
+
+    //optimized  -- by using the fact that norm is distance 1, so compute the last component through the formula
+    // 1 = sqrt(norm.x  ^ 2, norm.y ^ 2, norm.z ^ 2)
+    float norm_x = gb0[3];
+    float norm_y = gb1[3];
+    float norm_z = sqrt(1.0 - norm_x * norm_x - norm_y * norm_y);
+    //seems having error
+    vec3 normal = normalize(vec3(norm_x, norm_y, norm_z));
+
+    
+    //convert v_position from world to camera -- using view matrix
     vec3 cam_v_position = vec3(u_view_matrix * vec4(v_position,1.0));
 
     //invert the z coordinate of camera
@@ -160,6 +168,17 @@ export default function(params) {
       float lambertTerm = max(dot(L, normal), 0.0);
 
       fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
+
+      //add specular component -- idea from https://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_reflection_model
+      if(lambertTerm > 0.0)
+      {
+        //we don't pass in camera position, but view matrix have the information
+        vec3 half_dir = normalize(L + cam_v_position - v_position);
+        float spec_angle = max(dot(half_dir, normal), 0.0);
+        float shininess = 10.0;
+        float specular_component = pow(spec_angle, shininess);
+        fragColor += specular_component * lambertTerm * light.color * vec3(lightIntensity);//assume specular color is the same as light
+      }
     }
 
     const vec3 ambientLight = vec3(0.025);

@@ -13,7 +13,6 @@ export default function(params) {
   uniform sampler2D u_clusterbuffer;
 
   //necessary uniforma variables
-  //my codes
   uniform int u_x_sliced;
   uniform int u_y_sliced;
   uniform int u_z_sliced;
@@ -23,12 +22,6 @@ export default function(params) {
   uniform float u_far_clip;
   uniform int u_cluster_element_height;
   uniform int u_cluster_num;
-
-  //test codes -- jiangping
-  //uniform float u_near;
-  //uniform float u_far;
-  //uniform vec2 u_screenSize;
-  //uniform mat4 u_viewMatrix;
 
   varying vec3 v_position;
   varying vec3 v_normal;
@@ -168,7 +161,19 @@ export default function(params) {
       float lightIntensity = cubicGaussian(2.0 * lightDistance / light.radius);
       float lambertTerm = max(dot(L, normal), 0.0);
 
+      //diffuse color componenet
       fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
+
+      //add specular component -- idea from https://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_reflection_model
+      if(lambertTerm > 0.0)
+      {
+        //we don't pass in camera position, but view matrix have the information
+        vec3 half_dir = normalize(L + cam_v_position - v_position);
+        float spec_angle = max(dot(half_dir, normal), 0.0);
+        float shininess = 10.0;
+        float specular_component = pow(spec_angle, shininess);
+        fragColor += specular_component * lambertTerm * light.color * vec3(lightIntensity);//assume specular color is the same as light
+      }
     }
 
     const vec3 ambientLight = vec3(0.025);
@@ -177,41 +182,5 @@ export default function(params) {
     gl_FragColor = vec4(fragColor, 1.0);
   }
 
-  //test codes -- jiangping
-  // void main() {
-  //   vec3 albedo = texture2D(u_colmap, v_uv).rgb;
-  //   vec3 normap = texture2D(u_normap, v_uv).xyz;
-  //   vec3 normal = applyNormalMap(v_normal, normap);
-  //   vec3 fragColor = vec3(0.0);
-  //   int xSlices = u_x_sliced;
-  //   int ySlices = u_y_sliced;
-  //   int zSlices = u_z_sliced;
-    
-  //   int clusterNum = u_cluster_num;
-  //   int textureHeight = u_cluster_element_height;
-  //   vec3 camSpacePos = (u_view_matrix * vec4(v_position, 1.0)).xyz;
-  //   int xid = int(gl_FragCoord.x * float(xSlices) / u_screen_dim.x);
-  //   int yid = int(gl_FragCoord.y * float(ySlices) / u_screen_dim.y);
-  //   int zid = int((-camSpacePos.z - u_near_clip) * float(zSlices) / (u_far_clip - u_near_clip));
-  //   int clusterIdx =  xid + yid * xSlices + zid * xSlices * ySlices;
-  //   vec2 uv = vec2(float(clusterIdx + 1) / float(clusterNum + 1), 0.0);
-  //   int lightNum = int(texture2D(u_clusterbuffer, uv)[0]);
-  //   for (int i = 1; i <= ${params.maxLights}; ++i) {
-  //     if (i > lightNum) {
-  //       break;
-  //     }
-  //     float lightIdx = ExtractFloat(u_clusterbuffer, clusterNum, textureHeight, clusterIdx, i);
-  //     // doing the lighting calculations
-  //     Light light = UnpackLight(int(lightIdx));
-  //     float lightDistance = distance(light.position, v_position);
-  //     vec3 L = (light.position - v_position) / lightDistance;
-  //     float lightIntensity = cubicGaussian(2.0 * lightDistance / light.radius);
-  //     float lambertTerm = max(dot(L, normal), 0.0);
-  //     fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
-  //   }
-  //   const vec3 ambientLight = vec3(0.025);
-  //   fragColor += albedo * ambientLight;
-  //   gl_FragColor = vec4(fragColor, 1.0);
-  // }
   `;
 }

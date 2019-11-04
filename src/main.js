@@ -3,13 +3,14 @@ import ForwardRenderer from './renderers/forward';
 import ForwardPlusRenderer from './renderers/forwardPlus';
 import ClusteredRenderer from './renderers/clustered';
 import Scene from './scene';
+import {SPLITS_XY, SPLITS_Z} from './scene';
 
 const FORWARD = 'Forward';
 const FORWARD_PLUS = 'Forward+';
 const CLUSTERED = 'Clustered';
 
 const params = {
-  renderer: FORWARD_PLUS,
+  renderer: CLUSTERED,
   _renderer: null,
 };
 
@@ -21,10 +22,10 @@ function setRenderer(renderer) {
       params._renderer = new ForwardRenderer();
       break;
     case FORWARD_PLUS:
-      params._renderer = new ForwardPlusRenderer(15, 15, 15);
+      params._renderer = new ForwardPlusRenderer(SPLITS_XY[0], SPLITS_XY[1], SPLITS_Z[0]);
       break;
     case CLUSTERED:
-      params._renderer = new ClusteredRenderer(15, 15, 15);
+      params._renderer = new ClusteredRenderer(SPLITS_XY[0], SPLITS_XY[1], SPLITS_Z[0]);
       break;
   }
 }

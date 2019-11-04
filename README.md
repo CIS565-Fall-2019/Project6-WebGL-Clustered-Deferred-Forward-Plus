@@ -22,10 +22,18 @@ In this repository, I have created implementations of Forward+ and Clustered sha
 
 ## Forward+
 
+![](img/gifF.gif)
+
+With this, we store each light in buckets called "clusters", and only check those lights.
+
 ### Number of Lights vs FPS (Higher is Better)
 ![](img/gf.png)
 
 ## Clustered
+
+![](img/gifC.gif)
+
+Like forward+ but deferred.
 
 ### Number of Lights vs FPS (Higher is Better)
 ![](img/gc.png)
@@ -47,6 +55,12 @@ I reduce number of properties passed via g-buffer by using 2-component normals, 
 The frame rate with this optimization was 59.96 fps on average, without it was 58.8.
 
 ## Comparison of Forward, Forward+, and Clustered at 100 Lights in
+
+## Bloopers
+
+![](img/blooper.png)
+
+![](img/glitchCluster.gif)
 
 ### Credits
 

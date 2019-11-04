@@ -9,6 +9,13 @@ export default function(params) {
   uniform sampler2D u_normap;
   uniform sampler2D u_lightbuffer;
 
+  uniform mat4 u_viewProjectionMatrix;
+  uniform mat4 u_viewMatrix;
+
+  uniform float u_near;
+  uniform float u_far;
+  uniform float u_fov;
+
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
 
@@ -21,7 +28,7 @@ export default function(params) {
     vec3 up = normalize(vec3(0.001, 1, 0.001));
     vec3 surftan = normalize(cross(geomnor, up));
     vec3 surfbinor = cross(geomnor, surftan);
-    return normap.y * surftan + normap.x * surfbinor + normap.z * geomnor;
+    return normap[1] * surftan + normap.x * surfbinor + normap[2] * geomnor;
   }
 
   struct Light {
@@ -81,8 +88,31 @@ export default function(params) {
 
     vec3 fragColor = vec3(0.0);
 
-    for (int i = 0; i < ${params.numLights}; ++i) {
-      Light light = UnpackLight(i);
+    vec4 screenSpace = u_viewProjectionMatrix * vec4(v_position, 1);
+    screenSpace /= screenSpace[3];
+
+    float xSlices = float(${params._xSlices});
+    float ySlices = float(${params._ySlices});
+    float zSlices = float(${params._zSlices});
+    //float clusterZ = screenSpace.z / ((far - near) / zSlices);
+    vec4 clusterSizes = vec4(2.0 / xSlices, 2.0 / ySlices, 2.0 / zSlices, 1.0);
+    vec4 whichCluster = (screenSpace + 1.0) / clusterSizes;
+    whichCluster = vec4(floor(whichCluster[0]), floor(whichCluster[1]), floor(whichCluster[2]), 1);
+    whichCluster[0] = max(min(whichCluster[0], xSlices - 1.0), 0.0);
+    whichCluster[1] = max(min(whichCluster[1], ySlices - 1.0), 0.0);
+    whichCluster[2] = max(min(whichCluster[2], zSlices - 1.0), 0.0);
+    int clusterIndex = int(whichCluster[0] + whichCluster[1] * xSlices + whichCluster[2] * xSlices * ySlices);
+    int numClusters = int(xSlices * ySlices * zSlices);
+    int numLights = int(ExtractFloat(u_clusterbuffer, numClusters, ${params.maxNumLights} + 1, clusterIndex, 0));
+
+    //fragColor = vec3(screenSpace[0]/ 2.0 + 0.5, screenSpace[1]/ 2.0 + 0.5, screenSpace[2]/ 2.0 + 0.5);
+    //fragColor = vec3(whichCluster[0] / xSlices, whichCluster[1] / ySlices, whichCluster[2] / zSlices);
+    //if (numLights == 0) fragColor = vec3(1,0,0);
+
+    for (int i = 0; i < ${params.maxNumLights}; ++i) {
+      if (i >= numLights) break;
+      int lightIndex = int(ExtractFloat(u_clusterbuffer, numClusters, ${params.maxNumLights} + 1, clusterIndex, i + 1));
+      Light light = UnpackLight(lightIndex);
       float lightDistance = distance(light.position, v_position);
       vec3 L = (light.position - v_position) / lightDistance;
 

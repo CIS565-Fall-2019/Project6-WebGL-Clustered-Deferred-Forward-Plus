@@ -15,10 +15,13 @@ export default function(params) {
   // Additional info needed for cluster access
   uniform float u_camera_near;
   uniform float u_camera_far;
+  uniform float u_camera_width;
+  uniform float u_camera_height;
   uniform float u_camera_fov;
   uniform float u_camera_aspect;
   uniform mat4  u_view_matrix;
   uniform vec2  u_dim;
+  uniform float u_max_lights;
 
   uniform float u_x_slices;
   uniform float u_y_slices;
@@ -62,7 +65,7 @@ export default function(params) {
   // https://docs.unity3d.com/Manual/FrustumSizeAtDistance.html
   float GetFrustrumHeight(float depth) {
     float PI = 3.1415926535897932384626433832795;
-    return 2.0 * depth * tan(u_camera_fov * 0.5 *(PI / float(180)));
+    return 2.0 * depth * tan(u_camera_fov * 0.5 * (PI / float(180)));
   }
   float GetFrustrumWidth(float depth) {
     return GetFrustrumHeight(depth) * u_camera_aspect;
@@ -73,22 +76,19 @@ export default function(params) {
     // Position is in View space, so it relates directly to our view stuff
     // Need some bounds for the view frustrum
     vec4 view_pos = u_view_matrix * vec4(position, 1.0);
-    float zDepth = -view_pos.z;
-
-    // Just like in base.js
-    //float zDepth = zMin * pow((zMax / zMin), ((z + 1.0) / float(u_z_slices)));;
-    float width  = GetFrustrumWidth(zDepth);
-    float height = GetFrustrumHeight(zDepth);
+    float width  = u_camera_width;//GetFrustrumWidth(zDepth);
+    float height = u_camera_height;//GetFrustrumHeight(zDepth);
+    float depth  = u_camera_far - u_camera_near;
 
     // Armed with the above, get x, y, and z
-    // IDK why true_pos wont work.
-    int x = int(((view_pos.x + (width/2.0)) / width) * u_x_slices);
-    int y = int(((view_pos.y + (height/2.0)) / height) * u_y_slices);
-    float z = log(-view_pos.z) 
-            * (u_z_slices / log(u_camera_far/u_camera_near)) 
-            - ((u_z_slices * log(u_camera_near)) / log(u_camera_far / u_camera_near));
- 
-    return vec3(x, y, int(z));
+    // For x and y, we add width/2 to get in the range 0, width.
+    // We then divide by width to get a percentage of the width
+    // We lastly we multiply by the number of slices and floor it to get a cluster idx.
+    float x = floor(((view_pos.x + (width/2.0)) / width) * u_x_slices);
+    float y = floor(((view_pos.y + (height/2.0)) / height) * u_y_slices);
+    float z = floor(u_z_slices - log2(depth / (-view_pos.z - u_camera_near)));
+
+    return vec3(int(x), int(y), int(z));
   }
 
   int PositionToCluster(vec3 position) {
@@ -133,7 +133,7 @@ export default function(params) {
 
     vec3 fragColor = vec3(0.0);
 
-    // Get cluster info
+    // Get cluster info for debug. This was super helpful.
     vec3 debug_clusterColor = PositionToClusterVec3(v_position);
     debug_clusterColor.x /= u_x_slices;
     debug_clusterColor.y /= u_y_slices;
@@ -143,11 +143,19 @@ export default function(params) {
     int totalClusters = int(u_x_slices * u_y_slices * u_z_slices);
 
     // Calculate index for going into u_clusterBuffer
-    float tid = float(clusterIdx+1) / float(totalClusters+1);
+    float clusterBufferIdx = float(clusterIdx+1) / float(totalClusters+1);
+    int numLights = int(texture2D(u_clusterbuffer, vec2(clusterBufferIdx, 0))[0]);
 
-    int numLights = int(texture2D(u_clusterbuffer, vec2(tid, 0))[0]);
-    float clusterBufferStep = ((100.0 + 1.0) / 4.0) + 1.0;
+    // So this was the hardest part for me.
+    // Each buffer is num_cluster wide, and clusterBufferStep deep
+    // But its measured in PIXELS, not floats.
+    // So we take max_lights + 1 (gotta remmber the light count)
+    // and then divide by 4 cause xyza. Then we add one for
+    // a reason I still can't figure out, but i was told to do so by
+    // the CG Gods. And so I must appease them.
+    int clusterBufferStep = int(floor((u_max_lights + 1.0) / 4.0) + 1.0);
 
+    // For each light
     for (int i = 0; i < ${params.numLights}; ++i) {
       // GLSL wont allow a non-const as the for loop compartor
       // What a piece of trash
@@ -155,28 +163,12 @@ export default function(params) {
         break;
       }
 
-      // Get the light data from clusterBuffer
-      float lid = (float(i) / 101.0) / 4.0;
-      vec4 lightData = texture2D(u_clusterbuffer, vec2(tid, lid));
-      
-      int dataidx = int(float(i) - 4.0 * floor(float(i)/4.0));
-      //float light_index = lightData[int(dataidx)]; // WTF GLSL
-      // So you can't index in with non-constant data, and you 
-      // cant form const data from nonconst data
-      // WHAT?!
-      float light_index = 0.0;
-      if(dataidx == 0) {
-        light_index = lightData[0];
-      }
-      if(dataidx == 1) {
-        light_index = lightData[1];
-      }
-      if(dataidx == 2) {
-        light_index = lightData[2];
-      }
-      if(dataidx == 3) {
-        light_index = lightData[3];
-      }
+      float light_index = ExtractFloat(
+        u_clusterbuffer,
+        totalClusters,
+        clusterBufferStep,
+        clusterIdx,
+        i+1); // Don't want item 0, the light count.
 
       // About the same as before
       Light light = UnpackLight(int(light_index));

@@ -8,13 +8,19 @@ import { sqrDist } from 'gl-matrix/src/gl-matrix/vec3';
 export const MAX_LIGHTS_PER_CLUSTER = 100;
 
 function GetFrustrumWidth(camera, depth) {
-  return 2 * depth * Math.tan(camera.fov * 0.5 * (Math.PI / 180.0));
+  return (2 * depth * Math.tan(camera.fov * 0.5 * (Math.PI / 180.0))) * camera.aspect;
 }
 
 function GetFrustrumHeight(camera, depth) {
-  return GetFrustrumWidth(camera, depth) / camera.aspect;
+  return 2 * depth * Math.tan(camera.fov * 0.5 * (Math.PI / 180.0));
 }
 
+function clamp(num, min, max) {
+  return Math.min(Math.max(num, min), max);
+}
+
+// A relic if implementations past.
+// I spent too long on this and love it too much to give it up.
 class SphereRayIntersectionTest {
   // Equation from 
   // http://paulbourke.net/geometry/circlesphere/
@@ -118,6 +124,7 @@ export default class BaseRenderer {
     // Need some bounds for the view frustrum
     let zMin = camera.near;
     let zMax = camera.far;
+    let zDistance = zMax - zMin;
     let zDelta = (zMax - zMin) / this._zSlices;
 
     // Get width and height for xy respectively
@@ -135,90 +142,153 @@ export default class BaseRenderer {
       vec4.set(localLights[lightIdx], l[0], l[1], l[2], 1);
       vec4.transformMat4(localLights[lightIdx], localLights[lightIdx], viewMatrix);
       localLights[lightIdx][3] = scene.lights[lightIdx].radius;
-    }
 
-    // Run it through the segments and mark the ones that matter
-    // Instead of worrying about volume, we look at projections
-    for (let z = 0; z < this._zSlices; ++z) {
-      // Set Z to a logarithm,ic value. Hints taken from Avalanche.
-      // By setting this up as a log, we avoid having a ton of lights in the first
-      // cluster, since the depth is huge (2000).
-      // Otherwise the first cluster is 0 to -66 and encompasses most of the scene.
-      let z0 = -zMin * Math.pow((zMax / zMin), ((z+1) / this._zSlices));
-      let z1 = -zMin * Math.pow((zMax / zMin), ((z) / this._zSlices));
-      let zDepth = -z0;
+      let width = camera.getFilmWidth();
+      let height = camera.getFilmHeight();
+      let depth = camera.far - camera.near;
 
-      // Get width and height for xy respectively
-      // Is dependent on distance.
-      // https://docs.unity3d.com/Manual/FrustumSizeAtDistance.html
-      let width = GetFrustrumWidth(camera, zDepth);
-      let height = width / camera.aspect;
-      let minX = -1.0 * (width/2.0);
-      let maxX = (width/2.0);
-      let minY = -1.0 * (height/2.0);
-      let maxY = height/2.0;
-      let xDelta = (maxX - minX) / this._xSlices;
-      let yDelta = (maxY - minY) / this._ySlices;
+      // Get minimums for interaction along all dimensions
+      var xmin, xmax;
+      var ymin, ymax;
+      var zmin, zmax;
+      xmin = localLights[lightIdx][0] - localLights[lightIdx][3];
+      xmax = localLights[lightIdx][0] + localLights[lightIdx][3];
+      ymin = localLights[lightIdx][1] - localLights[lightIdx][3];
+      ymax = localLights[lightIdx][1] + localLights[lightIdx][3];
+      zmin = localLights[lightIdx][2] + localLights[lightIdx][3]; // z negative
+      zmax = localLights[lightIdx][2] - localLights[lightIdx][3]; // z negative
 
-      // Check each Y line for intersections
-      for (let y = 0; y < this._ySlices; ++y) {
-        // Will form a box using xyz from bottom left to top right
-        // this is defined by the box formed by the cluster
-        let y0 = minY + y * yDelta;
-        let y1 = minY + (y+1) * yDelta;
+      // Convert each value into a cluster index.
+      // X and y are linear on the screen
+      // Z is more complicated because the projection is so far.
+      // I chose a logarithmic approach, though this was through
+      // some trial and error.
+      xmin = Math.floor((((xmin + (width/2.0)) / width) * this._xSlices));
+      xmax = Math.ceil((((xmax + (width/2.0)) / width) * this._xSlices));
+      ymin = Math.floor((((ymin + (height/2.0)) / height) * this._ySlices));
+      ymax = Math.ceil((((ymax + (height/2.0)) / height) * this._ySlices));
+      zmin = Math.floor(this._zSlices - Math.log2(depth / (-zmin - camera.near)));
+      zmax = Math.ceil(this._zSlices - Math.log2(depth / (-zmax - camera.near)));
 
-        for (let x = 0; x < this._xSlices; ++x) {
-          let x0 = minX + x * xDelta;
-          let x1 = minX + (x+1) * xDelta;
+      // Clamp em, boys
+      xmin = clamp(xmin, 0, this._xSlices);
+      xmax = clamp(xmax, 0, this._xSlices);
+      ymin = clamp(ymin, 0, this._ySlices);
+      ymax = clamp(ymax, 0, this._ySlices);
+      zmin = clamp(zmin, 0, this._zSlices);
+      zmax = clamp(zmax, 0, this._zSlices);
 
-          // z0 and z1 calculated above, uses log instead of linear
-          // Create box to test against sphere intersection
-          let bound = new Box3(
-            new Vector3(x0, y0, z0),
-            new Vector3(x1, y1, z1)
-          );
+      // Now store the lights
+      for (let z = zmin; z < zmax; ++z) {
+        for (let y = ymin; y < ymax; ++y) {
+          for (let x = xmin; x < xmax; ++x) {
+            let clusterIdx = x + y * this._xSlices + z * this._xSlices * this._ySlices;
+            let clusterLightIdx = this._clusterTexture.bufferIndex(clusterIdx, 0);
+            let currLights = this._clusterTexture.buffer[clusterLightIdx];
+            
+            if(currLights < MAX_LIGHTS_PER_CLUSTER) {
+              // We good, increment our light count.
+              currLights++;
 
-          // For each light we have...
-          for (let lightIdx = 0; lightIdx < NUM_LIGHTS; lightIdx++) {
-            // Get center + radius, extract from scene struct to three.js Sphere
-            lightSphere.set(
-                new Vector3(
-                    localLights[lightIdx][0],
-                    localLights[lightIdx][1],
-                    localLights[lightIdx][2]
-                ),
-                localLights[lightIdx][3]);
+              // Locate the correct part of the pixel to populate
+              let pixel = Math.floor(currLights / 4);
 
-            // Check if the lightsphere abd box intersect
-            if(lightSphere.intersectsBox(bound)) {
-              let clusterIdx = x + y * this._xSlices + z * this._xSlices * this._ySlices;
-              let clusterLightIdx = this._clusterTexture.bufferIndex(clusterIdx, 0);
+              // We have to do this because of the way that  the buffers are defined
+              // Each _clusterBuffer contains many pixels that are really 4 floats
+              // So we are abusing that fact to carry over non-rgba data
+              // Why doesn't webGL have NORMAL DATA? Because whoever wrote it is dumb.
+              let base = this._clusterTexture.bufferIndex(clusterIdx, pixel);
+              let offset = currLights % 4;
 
-              let currLights = this._clusterTexture.buffer[clusterLightIdx];
-              if(currLights < MAX_LIGHTS_PER_CLUSTER) {
-                // We good, increment our light count.
-                currLights++;
-
-                // Locate the correct part of the pixel to populate
-                let pixel = Math.floor(currLights / 4);
-
-                // We have to do this because of the way that  the buffers are defined
-                // Each _clusterBuffer contains many pixels that are really 4 floats
-                // So we are abusing that fact to carry over non-rgba data
-                // Why doesn't webGL have NORMAL DATA? Because whoever wrote it is dumb.
-                let base = this._clusterTexture.bufferIndex(clusterIdx, pixel);
-                let offset = currLights % 4;
-
-                this._clusterTexture.buffer[base + offset]   = lightIdx;
-                this._clusterTexture.buffer[clusterLightIdx] = currLights;
-              }
+              this._clusterTexture.buffer[base + offset]   = lightIdx;
+              this._clusterTexture.buffer[clusterLightIdx] = currLights;
             }
           }
         }
-
-        // thank u, next
       }
     }
+
+    // // Run it through the segments and mark the ones that matter
+    // // Instead of worrying about volume, we look at projections
+    // for (let z = 0; z < this._zSlices; ++z) {
+    //   // Set Z to an inverse exponential. Hints taken from Avalanche.
+    //   // By setting this up as a log, we avoid having a ton of lights in the first
+    //   // cluster, since the depth is huge (2000).
+    //   // Otherwise the first cluster is 0 to -66 and encompasses most of the scene.
+    //   // NOTE: This 2 value can be tweaked.
+    //   let z0 = -zMin - (zDistance / Math.pow(2, this._zSlices - z + 1)); // plus 1 to make this value smaller than z1
+    //   let z1 = -zMin - (zDistance / Math.pow(2, this._zSlices - z));
+    //   let zDepth = -z0;
+
+    //   // Get width and height for xy respectively
+    //   // Is dependent on distance.
+    //   // https://docs.unity3d.com/Manual/FrustumSizeAtDistance.html
+    //   let width = GetFrustrumWidth(camera, zDepth);
+    //   let height = GetFrustrumHeight(camera, zDepth);
+    //   let minX = -1.0 * (width/2.0);
+    //   let maxX = (width/2.0);
+    //   let minY = -1.0 * (height/2.0);
+    //   let maxY = height/2.0;
+    //   let xDelta = (maxX - minX) / this._xSlices;
+    //   let yDelta = (maxY - minY) / this._ySlices;
+
+    //   // Check each Y line for intersections
+    //   for (let y = 0; y < this._ySlices; ++y) {
+    //     // Will form a box using xyz from bottom left to top right
+    //     // this is defined by the box formed by the cluster
+    //     let y0 = minY + y * yDelta;
+    //     let y1 = minY + (y+1) * yDelta;
+
+    //     for (let x = 0; x < this._xSlices; ++x) {
+    //       let x0 = minX + x * xDelta;
+    //       let x1 = minX + (x+1) * xDelta;
+
+    //       // z0 and z1 calculated above, uses log instead of linear
+    //       // Create box to test against sphere intersection
+    //       let bound = new Box3(
+    //         new Vector3(x0, y0, z0),
+    //         new Vector3(x1, y1, z1)
+    //       );
+
+    //       // For each light we have...
+    //       for (let lightIdx = 0; lightIdx < NUM_LIGHTS; lightIdx++) {
+    //         // Get center + radius, extract from scene struct to three.js Sphere
+    //         lightSphere.set(
+    //             new Vector3(
+    //                 localLights[lightIdx][0],
+    //                 localLights[lightIdx][1],
+    //                 localLights[lightIdx][2]
+    //             ),
+    //             localLights[lightIdx][3]);
+
+    //         // Check if the lightsphere abd box intersect
+    //         if(lightSphere.intersectsBox(bound)) {
+    //           let clusterIdx = x + y * this._xSlices + z * this._xSlices * this._ySlices;
+    //           let clusterLightIdx = this._clusterTexture.bufferIndex(clusterIdx, 0);
+
+    //           let currLights = this._clusterTexture.buffer[clusterLightIdx];
+    //           if(currLights < MAX_LIGHTS_PER_CLUSTER) {
+    //             // We good, increment our light count.
+    //             currLights++;
+
+    //             // Locate the correct part of the pixel to populate
+    //             let pixel = Math.floor(currLights / 4);
+
+    //             // We have to do this because of the way that  the buffers are defined
+    //             // Each _clusterBuffer contains many pixels that are really 4 floats
+    //             // So we are abusing that fact to carry over non-rgba data
+    //             // Why doesn't webGL have NORMAL DATA? Because whoever wrote it is dumb.
+    //             let base = this._clusterTexture.bufferIndex(clusterIdx, pixel);
+    //             let offset = currLights % 4;
+    //             this._clusterTexture.buffer[base + offset]   = lightIdx;
+    //             this._clusterTexture.buffer[clusterLightIdx] = currLights;
+    //           }
+    //         }
+    //       }
+    //     }
+    //     // thank u, next
+    //   }
+    // }
 
     this._clusterTexture.update();
   }

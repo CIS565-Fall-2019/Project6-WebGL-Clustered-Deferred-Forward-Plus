@@ -11,8 +11,6 @@ WebGL Clustered and Forward+ Shading
 
 ### Live Demo
 
-![](img/webgl.PNG)
-
 [![](img/webgl.PNG)](http://HC_Mark.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus)
 
 ### Demo Video/GIF

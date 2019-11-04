@@ -10,7 +10,7 @@ WebGL Clustered and Forward+ Shading
 
 ### Live Online
 
-[![](img/thumb.png)](http://TODO.github.io/Project5B-WebGL-Deferred-Shading)
+ https://coffeiersama.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/ 
 
 ### Demo Video/GIF
 

@@ -2,6 +2,7 @@ import { gl } from '../init';
 import { mat4, vec4, vec3 } from 'gl-matrix';
 import { loadShaderProgram } from '../utils';
 import { NUM_LIGHTS } from '../scene';
+import { MAX_LIGHTS_PER_CLUSTER } from './base';
 import vsSource from '../shaders/forwardPlus.vert.glsl';
 import fsSource from '../shaders/forwardPlus.frag.glsl.js';
 import TextureBuffer from './textureBuffer';
@@ -13,11 +14,14 @@ export default class ForwardPlusRenderer extends BaseRenderer {
 
     // Create a texture to store light data
     this._lightTexture = new TextureBuffer(NUM_LIGHTS, 8);
-    
+
     this._shaderProgram = loadShaderProgram(vsSource, fsSource({
       numLights: NUM_LIGHTS,
+      maxLights: MAX_LIGHTS_PER_CLUSTER,
     }), {
-      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer'],
+      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer',
+          'u_x_sliced', 'u_y_sliced', 'u_z_sliced', 'u_screen_dim', 'u_view_matrix',
+          'u_near_clip', 'u_far_clip', 'u_cluster_element_height', 'u_cluster_num'],
       attribs: ['a_position', 'a_normal', 'a_uv'],
     });
 
@@ -76,6 +80,24 @@ export default class ForwardPlusRenderer extends BaseRenderer {
     gl.uniform1i(this._shaderProgram.u_clusterbuffer, 3);
 
     // TODO: Bind any other shader inputs
+    //uniform int u_x_sliced;
+      gl.uniform1i(this._shaderProgram.u_x_sliced, this._xSlices);
+    // uniform int u_y_sliced;
+      gl.uniform1i(this._shaderProgram.u_y_sliced, this._ySlices);
+    // uniform int u_z_sliced;
+      gl.uniform1i(this._shaderProgram.u_z_sliced, this._zSlices);
+    // uniform vec2 u_screen_dim;
+      gl.uniform2f(this._shaderProgram.u_screen_dim, canvas.width, canvas.height);
+    // uniform mat4 u_view_matrix;
+      gl.uniformMatrix4fv(this._shaderProgram.u_view_matrix, false, this._viewMatrix);
+    // uniform float u_near_clip;
+      gl.uniform1f(this._shaderProgram.u_near_clip, camera.near);
+    // uniform float u_far_clip;
+      gl.uniform1f(this._shaderProgram.u_far_clip, camera.far);
+    // uniform float u_cluster_element_height; -- size of each cluster element -- helped by Jiangping
+      gl.uniform1i(this._shaderProgram.u_cluster_element_height, this._clusterTexture._pixelsPerElement);
+    // uniform float u_cluster_num;
+      gl.uniform1i(this._shaderProgram.u_cluster_num, this._clusterTexture._elementCount);
 
     // Draw the scene. This function takes the shader program so that the model's textures can be bound to the right inputs
     scene.draw(this._shaderProgram);

@@ -25,6 +25,8 @@ export default function(params) {
     vec3 color;
   };
 
+  //component should be the index within the light buffer?
+  //what are we doing here?
   float ExtractFloat(sampler2D texture, int textureWidth, int textureHeight, int index, int component) {
     float u = float(index + 1) / float(textureWidth + 1);
     int pixel = component / 4;
@@ -45,8 +47,8 @@ export default function(params) {
   Light UnpackLight(int index) {
     Light light;
     float u = float(index + 1) / float(${params.numLights + 1});
-    vec4 v1 = texture2D(u_lightbuffer, vec2(u, 0.0));
-    vec4 v2 = texture2D(u_lightbuffer, vec2(u, 0.5));
+    vec4 v1 = texture2D(u_lightbuffer, vec2(u, 0.0)); //extract the position of light -- first three floats
+    vec4 v2 = texture2D(u_lightbuffer, vec2(u, 0.5)); //extract the color of light -- why 0.5?
     light.position = v1.xyz;
 
     // LOOK: This extracts the 4th float (radius) of the (index)th light in the buffer

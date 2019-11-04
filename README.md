@@ -9,7 +9,7 @@ WebGL Clustered and Forward+ Shading
 MacBook Pro (Retina, 15-inch, Mid 2015) Mojave 10.14.2, Intel Iris Pro 1536 MB, AMD Radeon R9 M370X 2048 MB
 
 ### Live Online
-
+https://aleward.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/
 ![Here](https://aleward.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/)
 
 ### Demo Video/GIFs below

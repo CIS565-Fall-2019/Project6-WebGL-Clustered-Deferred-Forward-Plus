@@ -9,9 +9,11 @@ WebGL Clustered and Forward+ Shading
     - www.linkedin.com/in/tianming-xu-8bb81816a (LinkedIn)
   - Tested on: Windows 10, i7-8700 @ 3.20GHz 16GB, GTX 2080 8192MB (my personal desktop)
 
-Demo Video/GIF
+### Live Demo
 
-[![](img/webgl.png)](http://HC_Mark.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus)
+![](img/webgl.PNG)
+
+[![](img/webgl.PNG)](http://HC_Mark.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus)
 
 ### Demo Video/GIF
 
@@ -34,7 +36,7 @@ Demo Video/GIF
 
 ### Performance Analysis
 
-[![](img/performance chart.png)
+[![](img/performance_chart.png)
 
 From the chart above we can see the performance difference among all the rendering features.
 

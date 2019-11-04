@@ -16,6 +16,7 @@ const params = {
 setRenderer(params.renderer);
 
 function setRenderer(renderer) {
+  console.log(params.renderer);
   switch(renderer) {
     case FORWARD:
       params._renderer = new ForwardRenderer();
@@ -43,4 +44,38 @@ function render() {
   params._renderer.render(camera, scene);
 }
 
+let forwardplus = true;
+let lastnum = 0;
+let num = 0;
+
+function changetype() {
+    if(lastnum == num) {
+      return;
+    }
+    if(forwardplus) {
+      params.renderer = FORWARD_PLUS;
+      lastnum = num;
+      //console.log("0");
+    } else {
+      params.renderer = FORWARD;
+      lastnum = num;
+     // console.log("1");
+    }
+    //console.log(params.renderer);
+    setRenderer(params.renderer);
+}
+
+function main() {
+  window.addEventListener('keyup', function (e) {
+    switch(e.key) {
+      case 'w':
+      forwardplus = !forwardplus;
+      num++;
+      changetype();
+      break;
+    }
+  }, false);
+}
+//main();
 makeRenderLoop(render)();
+//makeRenderLoop(changetype)();

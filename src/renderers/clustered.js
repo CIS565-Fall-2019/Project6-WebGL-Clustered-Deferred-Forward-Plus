@@ -21,15 +21,23 @@ export default class ClusteredRenderer extends BaseRenderer {
     this._lightTexture = new TextureBuffer(NUM_LIGHTS, 8);
     
     this._progCopy = loadShaderProgram(toTextureVert, toTextureFrag, {
-      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap'],
+      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 
+      ],
       attribs: ['a_position', 'a_normal', 'a_uv'],
     });
 
     this._progShade = loadShaderProgram(QuadVertSource, fsSource({
       numLights: NUM_LIGHTS,
       numGBuffers: NUM_GBUFFERS,
+      xslices: xSlices,
+      yslices: ySlices,
+      zslices: zSlices,
+      numcluster: xSlices * ySlices * zSlices,
+      can_wid: canvas.width,
+      can_hei: canvas.height,
     }), {
-      uniforms: ['u_gbuffers[0]', 'u_gbuffers[1]', 'u_gbuffers[2]', 'u_gbuffers[3]'],
+      uniforms: ['u_gbuffers[0]', 'u_gbuffers[1]', 'u_gbuffers[2]', 'u_gbuffers[3]', 'u_viewProjMatrix', 'u_viewMatrix', 
+      'u_lightbuffer', 'u_clusterbuffer', 'u_cameranearandfar'],
       attribs: ['a_uv'],
     });
 
@@ -154,6 +162,9 @@ export default class ClusteredRenderer extends BaseRenderer {
     gl.useProgram(this._progShade.glShaderProgram);
 
     // TODO: Bind any other shader inputs
+    gl.uniformMatrix4fv(this._progShade.u_viewMatrix, false, this._viewMatrix);
+    gl.uniform2fv(this._progShade.u_cameranearandfar, [camera.near, camera.far]);
+    gl.uniform2fv(this._progShade.u_screendim, [canvas.width, canvas.height]);
 
     // Bind g-buffers
     const firstGBufferBinding = 0; // You may have to change this if you use other texture slots
@@ -162,6 +173,14 @@ export default class ClusteredRenderer extends BaseRenderer {
       gl.bindTexture(gl.TEXTURE_2D, this._gbuffers[i]);
       gl.uniform1i(this._progShade[`u_gbuffers[${i}]`], i + firstGBufferBinding);
     }
+    //bind light and cluster texture
+    gl.activeTexture(gl[`TEXTURE${NUM_GBUFFERS + firstGBufferBinding}`]);
+    gl.bindTexture(gl.TEXTURE_2D, this._lightTexture.glTexture);
+    gl.uniform1i(this._progShade.u_lightbuffer, NUM_GBUFFERS + firstGBufferBinding);
+
+    gl.activeTexture(gl[`TEXTURE${NUM_GBUFFERS + firstGBufferBinding + 1}`]);
+    gl.bindTexture(gl.TEXTURE_2D, this._clusterTexture.glTexture);
+    gl.uniform1i(this._progShade.u_clusterbuffer, NUM_GBUFFERS + firstGBufferBinding + 1);
 
     renderFullscreenQuad(this._progShade);
   }

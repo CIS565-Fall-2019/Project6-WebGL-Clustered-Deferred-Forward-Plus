@@ -73,12 +73,17 @@ export default function(params) {
     // TODO: extract data from g buffers and do lighting
     vec4 gb0 = texture2D(u_gbuffers[0], v_uv);
     vec4 gb1 = texture2D(u_gbuffers[1], v_uv);
-    vec4 gb2 = texture2D(u_gbuffers[2], v_uv);
-    //vec4 gb3 = texture2D(u_gbuffers[3], v_uv);
 
+    // Inspired by https://stackoverflow.com/questions/29251819/efficient-way-to-store-3d-normal-vector-using-two-floats 
+    float nx = gb0.a;
+    float ny = gb1.a;
+    float a = nx - ny;
+    float b = nx + ny;
+    float nz = sqrt(1.0 - a * a - b * b);
+    
+    vec3 g_normal = normalize(vec3(nx, ny, nz));
     vec3 g_position = gb0.xyz;
-    vec3 g_normal =   gb1.xyz;
-    vec3 albedo =     gb2.rgb;
+    vec3 albedo = gb1.rgb;
 
     // Slices from params
     int xS = int(${params.xSlice});
@@ -88,7 +93,7 @@ export default function(params) {
     vec3 fragColor = vec3(0.0);
 
     // Cluster Computation 
-    vec4 camPos = u_viewMatrix * vec4(g_position, gb0.w);
+    vec4 camPos = u_viewMatrix * vec4(g_position, 1.0);
     camPos.z *= -1.0;
     float wDiv = camPos.z;
     vec3 clust = vec3(floor((u_SA * camPos.x / wDiv + 1.0) / 2.0 * float(xS)),     
@@ -116,10 +121,13 @@ export default function(params) {
       float lightDistance = distance(light.position, g_position);
       vec3 L = (light.position - g_position) / lightDistance;
 
+      float lambertTerm = max(dot(normalize(L), g_normal), 0.0);
+      
+      // Comment for BlinnPhong
       float lightIntensity = cubicGaussian(2.0 * lightDistance / light.radius);
-      float lambertTerm = max(dot(L, g_normal), 0.0);
-
       fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
+      /*float spec = max(pow(lambertTerm, 35.0), 0.0);
+      fragColor += albedo * lambertTerm * light.color * vec3(spec);*/
     }
 
 
@@ -128,7 +136,7 @@ export default function(params) {
     fragColor += albedo * ambientLight;
 
 
-    gl_FragColor = vec4(fragColor, gb2.w);
+    gl_FragColor = vec4(fragColor, 1.0);
   }
   `;
 }

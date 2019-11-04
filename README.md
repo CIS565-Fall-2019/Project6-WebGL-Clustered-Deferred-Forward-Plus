@@ -3,9 +3,10 @@ WebGL Clustered and Forward+ Shading
 
 **University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 5**
 
-* (TODO) YOUR NAME HERE
-* Tested on: (TODO) **Google Chrome 222.2** on
-  Windows 22, i7-2222 @ 2.22GHz 22GB, GTX 222 222MB (Moore 2222 Lab)
+* Alexis Ward
+    * [LinkedIn](https://www.linkedin.com/in/alexis-ward47/), [personal website](https://www.alexis-ward.tech/)
+* Tested on: **Google Chrome 77.0.3865.120 (Official Build) (64-bit)** on
+MacBook Pro (Retina, 15-inch, Mid 2015) Mojave 10.14.2, Intel Iris Pro 1536 MB, AMD Radeon R9 M370X 2048 MB
 
 ### Live Online
 
@@ -15,14 +16,37 @@ WebGL Clustered and Forward+ Shading
 
 [![](img/video.png)](TODO)
 
-### (TODO: Your README)
+# README
 
-*DO NOT* leave the README to the last minute! It is a crucial part of the
-project, and we will not be able to grade you without a good README.
+In this repository, I have created implementations of Forward+ and Clustered shading in order to compare their performances. I can't seem to get a good representation of milliseconds (the number is usually 0,1), I'm so sorry, so performance analyses are in FPS.
 
-This assignment has a considerable amount of performance analysis compared
-to implementation work. Complete the implementation early to leave time!
+## Forward+
 
+### Number of Lights vs FPS (Higher is Better)
+![](img/gf.png)
+
+## Clustered
+
+### Number of Lights vs FPS (Higher is Better)
+![](img/gc.png)
+
+## Effects
+
+ Started writing a Gaussian shader, but must get back to this at another time.
+
+### Blinn Phong
+
+Uncomment lines 127 - 130 in `deferred.frag` to view.
+
+![](img/blinn-phong.png)
+
+## Optimizations
+
+I reduce number of properties passed via g-buffer by using 2-component normals, which means I only record the x and y normal values, and I compute the z value in the deferred fragment shader. Sadly, this creates a weird 'pinching' effect in the reflections, when the lights get close to a surface
+
+The frame rate with this optimization was 59.96 fps on average, without it was 58.8.
+
+## Comparison of Forward, Forward+, and Clustered at 100 Lights in
 
 ### Credits
 

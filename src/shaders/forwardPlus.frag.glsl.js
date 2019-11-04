@@ -11,12 +11,12 @@ export default function(params) {
 
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
-  uniform mat4 u_viewProjectionMatrix;
   uniform mat4 u_viewMatrix;
+  uniform float u_SA;
   uniform float u_S;
-  uniform float u_A;
-  uniform float u_P;
-  uniform float u_Q;
+  uniform float u_maxDist;
+  uniform float u_near;
+  uniform float u_far;
 
   varying vec3 v_position;
   varying vec3 v_normal;
@@ -93,10 +93,11 @@ export default function(params) {
 
     // Find out which cluster we're in
     vec4 camPos = u_viewMatrix * vec4(v_position, 1.0);
+    camPos.z *= -1.0;
     float wDiv = camPos.z;
-    vec3 clust = vec3(floor((camPos.x * u_S / u_A) / wDiv * float(xS)),       
-                    floor(camPos.y * u_S / wDiv * float(yS)),                  
-                    floor((camPos.z * u_P + camPos.w * u_Q) / wDiv * float(zS)));
+    vec3 clust = vec3(floor((u_SA * camPos.x / wDiv + 1.0) / 2.0 * float(xS)),     
+                      floor((u_S  * camPos.y / wDiv + 1.0) / 2.0 * float(yS)),     
+                      floor((camPos.z / u_maxDist) * float(zS))); 
     /*vec4 fragPos = u_viewProjectionMatrix * vec4(v_position, 1.0);
     fragPos /= fragPos.w;
     vec3 clust = (vec3(fragPos) + 1.0) * 0.5;
@@ -105,19 +106,18 @@ export default function(params) {
                  floor(clust.z * float(${params.zSlice})));*/
     
     // Cluster data
-    int idx = int(clust.x + clust.y * float(${params.xSlice}) + 
-                  clust.z * float(${params.xSlice}) * float(${params.ySlice}));
-    int count = int(float(${params.xSlice}) * float(${params.ySlice}) * float(${params.zSlice}));
+    int idx = int(clust.x) + int(clust.y) * xS + int(clust.z) * xS * yS;
+    int count = xS * yS * zS;
     int textureHeight = int(ceil((float(${params.maxNumLights}) + 1.0) / 4.0));
 
     // Similar to UnpackLight, but cluster indices instead of lights
     float u = float(idx + 1) / float(count + 1);
     float numLts = texture2D(u_clusterbuffer, vec2(u, 0.0)).x;
-    // Maybe Extract Float instead
-    //float numLts = ExtractFloat(u_clusterbuffer, count, int(${params.numLights}) + 1, idx, 0);
+    // Maybe Extract Float instead - both work
+    //float numLts = ExtractFloat(u_clusterbuffer, count, textureHeight + 1, idx, 0);
 
-    for (int i = 1; i <= int(${params.numLights}); ++i) {
-      if (i >= int(numLts)) {
+    for (int i = 1; i <= int(${params.maxNumLights}); ++i) {
+      if (i > int(numLts)) {
         break;
       }
       // Extract the float stored at each light index, offput by 1 because of how we stored numLights

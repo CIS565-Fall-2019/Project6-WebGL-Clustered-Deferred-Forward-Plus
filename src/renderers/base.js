@@ -31,7 +31,7 @@ export default class BaseRenderer {
     let radians = Math.PI / 180.0;
     let S = 1.0 / Math.tan(radians * camera.fov / 2.0);
     let A = camera.aspect;
-    let SA = S/A;
+    let SA = S / A;
     // Had P and Q as well, but it got wonky so I just used the dist / maxDist proportion
     let maxDist = camera.far - camera.near;
 
@@ -68,7 +68,7 @@ export default class BaseRenderer {
         return pos3;
       }
 
-      // NEW HELPER FUNC BC PROJECTION MATRIX DOESNT LIKE ME
+      // NEW HELPER FUNC BC PROJECTION MATRIX DOESNT LIKE ME shoulda just passed it in with viewMat :/
       var nonProjMat = function(displacement, xSl, ySl, zSl) {
         // Displace the vector by the given vector (radius)
         var newPos = vec4.create();

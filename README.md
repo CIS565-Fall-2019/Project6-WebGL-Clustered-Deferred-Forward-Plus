@@ -10,7 +10,7 @@ MacBook Pro (Retina, 15-inch, Mid 2015) Mojave 10.14.2, Intel Iris Pro 1536 MB, 
 
 ### Live Online
 
-[![](Here)](https://aleward.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/)
+![](https://aleward.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/)
 
 ### Demo Video/GIFs below
 

@@ -11,21 +11,21 @@ export default class BaseRenderer {
     this._xSlices = xSlices;
     this._ySlices = ySlices;
     this._zSlices = zSlices;
-    this.near_width = 0;
-    this.near_height = 0;
-    this.far_width = 0;
-    this.far_height = 0;
+    this.nearWidth = 0;
+    this.nearHeight = 0;
+    this.farWidth = 0;
+    this.farHeight = 0;
   }
 
   updateClusters(camera, viewMatrix, scene) {
     // TODO: Update the cluster texture with the count and indices of the lights in each cluster
     // This will take some time. The math is nontrivial...
     let t_fov = Math.tan(camera.fov * 0.5 * (Math.PI / 180.0));
-    this.near_height = 2.0 * camera.near * t_fov;
-    this.near_width = this.near_height * camera.aspect;
+    this.nearHeight = 2 * camera.near * t_fov;
+    this.nearWidth = this.nearHeight * camera.aspect;
 
-    this.far_height = 2.0 * camera.far * t_fov;
-    this.far_width = this.far_height * camera.aspect;
+    this.farHeight = 2 * camera.far * t_fov;
+    this.farWidth = this.farHeight * camera.aspect;
 
     for (let z = 0; z < this._zSlices; ++z) {
       for (let y = 0; y < this._ySlices; ++y) {
@@ -37,7 +37,7 @@ export default class BaseRenderer {
       }
     }
     for(let lightId = 0; lightId < scene.lights.length; lightId++){
-      let sliceBounds = this.calculateSliceBounds(scene, lightId, this.near_width, this.near_height, this.far_width, this.far_height, camera.near, camera.far, viewMatrix);
+      let sliceBounds = this.calculateSliceBounds(scene, lightId, this.nearWidth, this.nearHeight, this.farWidth, this.farHeight, camera.near, camera.far, viewMatrix);
       for(let x = sliceBounds.xMin; x <= sliceBounds.xMax; x++)
       {
         for(let y = sliceBounds.yMin; y <= sliceBounds.yMax; y++)

@@ -18,7 +18,7 @@ WebGL Clustered and Forward+ Shading
 [![](img/video.png)](TODO)
 
 ## Overview
-This repo contains a WebGL based forward and differed renderer. A live demo of the final results can be found at [this link](). 
+This repo contains a WebGL based forward and differed renderer. A live demo of the final results can be found at [this link]( https://black-phoenix.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/ ). 
 ## Method
 3 Methods of rendering were implemented. They are explained below
 ### Forward rendering
@@ -37,9 +37,15 @@ Differed rendering works by rasterizing all of the scene objects (excluding ligh
 Besides implementing the 3 above mentioned rendering methods, Blinn-Phong reflection were also implemented to better simulate reflections. The core idea is to calculate what is called the halfway vector H (shown below) instead of using the dot product of R (reflected ray) and V (Viewer/eye). 
 ![blinn phong]( https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Blinn_Vectors.svg/440px-Blinn_Vectors.svg.png )
 
-Once we have H (can be calculated using the equation below), we replace R.V with N.H. This results in a more efficient calculation, making it faster than Phong reflections alone (in certain cases).
+Once we have H (can be calculated using the equation below), we replace R.V with N.H. This results in a more efficient calculation, making it faster than Phong reflections alone (in certain cases). Below is also a simple comparison with Blinn Phong turned on and off (it might be hard to see the difference because the images are different).
 
 ![H={\frac {L+V}{\left\|L+V\right\|}}](https://wikimedia.org/api/rest_v1/media/math/render/svg/07901c4d6d0ef78bd45a158ea268255a1199ce90)
+
+| Phong reflections               | Blinn Phong reflections          |
+| ------------------------------- | -------------------------------- |
+| ![Phong](./imgs/phong_only.png) | ![Phong](./imgs/blinn_phong.png) |
+
+
 
 ## Results
 

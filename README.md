@@ -57,6 +57,10 @@ video: https://vimeo.com/370961664
 
   encode normal into spheremap and decode in the fragment shader. How to do is based on the reference. This method has little loss compared to others.
 
+  | Normal recover  |   Nover actual    |
+  | :-------------: | :---------------: |
+  | ![](normal.png) | ![](normal_o.png) |
+  
   
 
 ## Performance Analysis

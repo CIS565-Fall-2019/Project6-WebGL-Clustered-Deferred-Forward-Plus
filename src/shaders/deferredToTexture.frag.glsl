@@ -4,6 +4,7 @@ precision highp float;
 
 uniform sampler2D u_colmap;
 uniform sampler2D u_normap;
+uniform mat4 u_viewProjectionMatrix;
 
 varying vec3 v_position;
 varying vec3 v_normal;
@@ -22,8 +23,10 @@ void main() {
     vec3 col = vec3(texture2D(u_colmap, v_uv));
 
     // TODO: populate your g buffer
-    // gl_FragData[0] = ??
-    // gl_FragData[1] = ??
-    // gl_FragData[2] = ??
-    // gl_FragData[3] = ??
+    // Want to do it how LeadWerks does (only storing the depth, and reconstructing
+    // position that and the frag position. But no time to change frag code
+
+    // Inspired by https://stackoverflow.com/questions/29251819/efficient-way-to-store-3d-normal-vector-using-two-floats
+    gl_FragData[0] = vec4(v_position, norm.x);
+    gl_FragData[1] = vec4(col, norm.y);
 }

@@ -76,6 +76,6 @@ function main() {
     }
   }, false);
 }
-//main();
+main();
 makeRenderLoop(render)();
-//makeRenderLoop(changetype)();
+makeRenderLoop(changetype)();

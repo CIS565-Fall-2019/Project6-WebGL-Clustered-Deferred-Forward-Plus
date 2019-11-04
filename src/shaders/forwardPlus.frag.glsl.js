@@ -102,14 +102,14 @@ export default function(params) {
     int indz = int((incamerap[2] - u_cameranearandfar[0]) / stridedepth);
     
     int cluster_width =  int(x_slides * y_slides * z_slides);
-    int cluster_height =  (int(${params.numLights}) + 1) / 4 + 1;
+    int cluster_height =  (int(${params.max_num}) + 1) / 4 + 1;
     
     int ind3d = int(indx + indy * x_slides + indz * x_slides * y_slides);
     float cluster_u = float(ind3d + 1) / float(int(${params.numcluster}) + 1);
     float cluster_v = float(0 + 1) / float(cluster_height + 1);
     int light_count = int(texture2D(u_clusterbuffer, vec2(cluster_u, cluster_v))[0]);//count ind1-3 
     
-    for (int i = 1; i <= int(${params.numLights}); i++) {
+    for (int i = 1; i <= int(${params.max_num}); i++) {
       if (i > light_count) {
         break;
       }

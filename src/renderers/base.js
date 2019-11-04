@@ -4,7 +4,7 @@ import { vec3, vec4, vec2 } from 'gl-matrix';
 import { min, max } from 'gl-matrix/src/gl-matrix/vec4';
 
 
-export const MAX_LIGHTS_PER_CLUSTER = 100;
+export const MAX_LIGHTS_PER_CLUSTER = 300;
 
 function getDis(scale, lightPos)
 {
@@ -22,6 +22,15 @@ export default class BaseRenderer {
     this._xSlices = xSlices;
     this._ySlices = ySlices;
     this._zSlices = zSlices;
+  }
+
+  calDist(ratio, position){
+    let temp = Math.sqrt(1 + ratio * ratio);
+    let a1 = 1 / temp;
+    let a2 = -ratio * a1;
+    let normal = vec2.create();
+    vec2.set(normal, a1, a2);
+    return vec2.dot(position, normal);
   }
 
   updateClusters(camera, viewMatrix, scene) {
@@ -48,17 +57,17 @@ export default class BaseRenderer {
 
       //for the light
       let radius = scene.lights[i].radius;
-      let maxz = posinc[2] + radius;
-      let minz = posinc[2] - radius;
-      let maxx = posinc[0] + radius;
-      let minx = posinc[0] - radius;
-      let maxy = posinc[1] + radius;
-      let miny = posinc[1] - radius;
+      let maxz = posinc[2] + radius*1.2;
+      let minz = posinc[2] - radius*1.2;
+      let maxx = posinc[0] + radius*1.2;
+      let minx = posinc[0] - radius*1.2;
+      let maxy = posinc[1] + radius*1.2;
+      let miny = posinc[1] - radius*1.2;
 
 
-      if (maxz < camera.near || minz > camera.far) {
+     /* if (maxz < camera.near || minz > camera.far) {
         continue;
-      }
+      }*/
 
       let frustz = minz < camera.near? camera.near : minz;
       let yRange = frustz * Math.tan(camera.fov * 0.5 * (Math.PI / 180));//100?
@@ -102,12 +111,14 @@ export default class BaseRenderer {
               // the index of cluster count->cluster count!
               // get the current light count! 
               let count = this._clusterTexture.buffer[this._clusterTexture.bufferIndex(ind, 0)];
-              count = count + 1;
-              this._clusterTexture.buffer[this._clusterTexture.bufferIndex(ind, 0)] = count;
-              let rowc = Math.floor(count / 4);
-              let colc = count - rowc * 4;
-              //set the light index!
-              this._clusterTexture.buffer[this._clusterTexture.bufferIndex(ind, rowc) + colc] = i; 
+                if((count + 1) <= MAX_LIGHTS_PER_CLUSTER) {
+                count = count + 1;
+                this._clusterTexture.buffer[this._clusterTexture.bufferIndex(ind, 0)] = count;
+                let rowc = Math.floor(count / 4);
+                let colc = count - rowc * 4;
+                //set the light index!
+                this._clusterTexture.buffer[this._clusterTexture.bufferIndex(ind, rowc) + colc] = i; 
+            }
               //console.log("index:", ind, "count:", count, "rowc: ", rowc, "colc: ",  colc);
           }
         }

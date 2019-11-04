@@ -14,8 +14,9 @@ export default function(params) {
   uniform mat4 u_viewMatrix;
   uniform vec2 u_cameranearandfar;
   uniform vec2 u_screendim;
-
-  //uniform mat4 u_viewInvMatrix;
+  uniform vec3 u_eye;
+  uniform mat4 u_viewProjInv;
+  uniform mat4 u_ViewInv;
  
   vec3 applyNormalMap(vec3 geomnor, vec3 normap) {
     normap = normap * 2.0 - 1.0;
@@ -79,13 +80,32 @@ export default function(params) {
     // TODO: extract data from g buffers and do lighting
     vec4 gb0 = texture2D(u_gbuffers[0], v_uv);
     vec4 gb1 = texture2D(u_gbuffers[1], v_uv);
-    vec4 gb2 = texture2D(u_gbuffers[2], v_uv);
-    //vec4 gb3 = texture2D(u_gbuffers[3], v_uv);
+    //vec4 gb2 = texture2D(u_gbuffers[2], v_uv);
 
+    //origin
     vec3 albedo = gb0.xyz;
-    vec3 pos = gb1.xyz;// world position
-    vec3 normal = gb2.xyz;
-    //vec3 vpos = (u_viewMatrix * vec4(pos, 1.0)).xyz; // in camera space
+    //vec3 pos = gb1.xyz;// world position
+    //vec3 normal = normalize(gb2.xyz);
+
+    //optimize
+    float norx = gb1.x;
+    float nory = gb1.y; 
+    vec4 nn = vec4(vec2(norx, nory) * 2.0 + vec2(-1.0,-1.0), 1.0, -1.0);
+    float l = dot(nn.xyz, -nn.xyw);
+    nn.z = l;
+    nn.xy *= sqrt(l);
+    vec3 normal = nn.xyz * 2.0 + vec3(0.0, 0.0, -1.0);
+    
+    // calculate position in world space
+    float pndcz = gb0.w;
+    float pz = gb1.z;
+    vec2 ndc = vec2(2.0 * v_uv.x - 1.0, 2.0 * v_uv.y - 1.0);//0-1=>-1-1
+    vec4 p = vec4(ndc.xy, pndcz, 1.0);
+    vec4 worldPos = u_viewProjInv * p;
+    worldPos /= worldPos.w;
+
+    //vec3 pos = vec3(gb1.z, gb1.w, gb0.w);
+    vec3 pos = worldPos.xyz;
 
     //ust like plus!!!!!!!!!!!!!!!!!!!!
     //read the cluster texture to decrease the count of the light we need to deal with
@@ -106,7 +126,7 @@ export default function(params) {
     int indz = int((incamerap[2] - u_cameranearandfar[0]) / stridedepth);
 
     int cluster_width =  int(x_slides * y_slides * z_slides);
-    int cluster_height =  (int(${params.numLights}) + 1) / 4 + 1;
+    int cluster_height = (int(${params.max_num}) + 1) / 4 + 1;
     
     int ind3d = int(indx + indy * x_slides + indz * x_slides * y_slides);
     float cluster_u = float(ind3d + 1) / float(int(${params.numcluster}) + 1);
@@ -115,7 +135,7 @@ export default function(params) {
     
     vec3 fragColor = vec3(0.0);
 
-    for (int i = 1; i <= int(${params.numLights}); i++) {
+    for (int i = 1; i <= int(${params.max_num}); i++) {
       if (i > light_count) {
         break;
       }
@@ -130,13 +150,22 @@ export default function(params) {
       float lambertTerm = max(dot(L, normal), 0.0);
 
       fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
+
+      //blinn phong
+      vec3 specolor = vec3(0.9, 0.0, 0.9);
+      vec3 V = normalize(u_eye - pos);
+      //float3 H = normalize( lightDir + viewDir );
+      vec3 H = normalize(L + V);
+      float power = 80.0;
+      float specularcoeff = pow(max(dot(H, normal), 0.0), power);
+      fragColor += (specolor * specularcoeff) * light.color * vec3(lightIntensity);
     }
 
     const vec3 ambientLight = vec3(0.025);
     fragColor += albedo * ambientLight;
     gl_FragColor = vec4(fragColor, 1.0);
 
-    //gl_FragColor = vec4(v_uv, 0.0, 1.0);
+    //gl_FragColor = vec4(normal, 1.0);
   }
   `;
 }

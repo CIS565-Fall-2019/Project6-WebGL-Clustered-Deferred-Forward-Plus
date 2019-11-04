@@ -5,7 +5,7 @@ import { NUM_LIGHTS } from '../scene';
 import vsSource from '../shaders/forwardPlus.vert.glsl';
 import fsSource from '../shaders/forwardPlus.frag.glsl.js';
 import TextureBuffer from './textureBuffer';
-import BaseRenderer from './base';
+import BaseRenderer, { MAX_LIGHTS_PER_CLUSTER } from './base';
 
 export default class ForwardPlusRenderer extends BaseRenderer {
   constructor(xSlices, ySlices, zSlices) {
@@ -21,7 +21,8 @@ export default class ForwardPlusRenderer extends BaseRenderer {
       zslices: zSlices,
       numcluster: xSlices * ySlices * zSlices,
       can_wid: canvas.width,
-      can_hei: canvas.height
+      can_hei: canvas.height,
+      max_num: MAX_LIGHTS_PER_CLUSTER
     }), {
       uniforms: ['u_viewProjectionMatrix', 'u_colmap', 
       'u_normap', 'u_lightbuffer', 'u_clusterbuffer', 

@@ -92,12 +92,12 @@ export default class BaseRenderer {
       
       // Clamp values from [0, slice#]
       let zLow = Math.max(lowPos[2], 0.0);
-      let yLow = Math.max(lowPos[1], 0.0);
-      let xLow = Math.max(lowPos[0], 0.0);
+      let yLow = Math.max(lowPos[1] - 1, 0.0);   // Offsets to help with bug
+      let xLow = Math.max(lowPos[0] - 2, 0.0);
 
       let zHigh = Math.min(topPos[2], this._zSlices);
-      let yHigh = Math.min(topPos[1], this._ySlices);
-      let xHigh = Math.min(topPos[0], this._xSlices);
+      let yHigh = Math.min(topPos[1] + 1, this._ySlices);
+      let xHigh = Math.min(topPos[0] + 2, this._xSlices);
 
       // Can check for a "sphere" of clusters overlapping the light sphere, but notes say:
       // "The traditional approach of checking the six frustum planes has false intersections at the frustum corners.  

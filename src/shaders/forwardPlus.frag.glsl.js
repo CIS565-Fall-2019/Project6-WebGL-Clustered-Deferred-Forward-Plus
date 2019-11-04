@@ -11,12 +11,11 @@ export default function(params) {
 
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
+  uniform mat4 u_viewProjectionMatrix;
   uniform mat4 u_viewMatrix;
   uniform float u_SA;
   uniform float u_S;
   uniform float u_maxDist;
-  uniform float u_near;
-  uniform float u_far;
 
   varying vec3 v_position;
   varying vec3 v_normal;
@@ -93,6 +92,7 @@ export default function(params) {
 
     // Find out which cluster we're in
     vec4 camPos = u_viewMatrix * vec4(v_position, 1.0);
+    //float z = distance(v_position, vec3(u_viewMatrix[3]));
     camPos.z *= -1.0;
     float wDiv = camPos.z;
     vec3 clust = vec3(floor((u_SA * camPos.x / wDiv + 1.0) / 2.0 * float(xS)),     
@@ -103,7 +103,7 @@ export default function(params) {
     vec3 clust = (vec3(fragPos) + 1.0) * 0.5;
     clust = vec3(floor(clust.x * float(${params.xSlice})), 
                  floor(clust.y * float(${params.ySlice})), 
-                 floor(clust.z * float(${params.zSlice})));*/
+                 floor(clust.z * float(${params.zSlice}))); */
     
     // Cluster data
     int idx = int(clust.x) + int(clust.y) * xS + int(clust.z) * xS * yS;
@@ -135,7 +135,7 @@ export default function(params) {
 
 
 
-    const vec3 ambientLight = vec3(0.025);
+    const vec3 ambientLight = vec3(0.1);
     fragColor += albedo * ambientLight;
 
     gl_FragColor = vec4(fragColor, 1.0);

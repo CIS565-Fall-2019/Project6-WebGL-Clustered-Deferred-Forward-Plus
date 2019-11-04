@@ -84,17 +84,17 @@ export default function(params) {
 
     //not optimized
     //gb2 is normal
-    //vec4 gb2 = texture2D(u_gbuffers[2], v_uv);
-    //vec3 normal = gb2.xyz;
+    vec4 gb2 = texture2D(u_gbuffers[2], v_uv);
+    vec3 normal = gb2.xyz;
 
 
     //optimized  -- by using the fact that norm is distance 1, so compute the last component through the formula
     // 1 = sqrt(norm.x  ^ 2, norm.y ^ 2, norm.z ^ 2)
-    float norm_x = gb0[3];
-    float norm_y = gb1[3];
-    float norm_z = sqrt(1.0 - norm_x * norm_x - norm_y * norm_y);
+    //float norm_x = gb0[3];
+    //float norm_y = gb1[3];
+    //float norm_z = sqrt(1.0 - norm_x * norm_x - norm_y * norm_y);
     //seems having error
-    vec3 normal = normalize(vec3(norm_x, norm_y, norm_z));
+    //vec3 normal = normalize(vec3(norm_x, norm_y, norm_z));
 
     
     //convert v_position from world to camera -- using view matrix

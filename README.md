@@ -10,11 +10,9 @@ MacBook Pro (Retina, 15-inch, Mid 2015) Mojave 10.14.2, Intel Iris Pro 1536 MB, 
 
 ### Live Online
 
-[![](img/thumb.png)](http://TODO.github.io/Project5B-WebGL-Deferred-Shading)
+[![]()](https://aleward.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/)
 
-### Demo Video/GIF
-
-[![](img/video.png)](TODO)
+### Demo Video/GIFs below
 
 # README
 

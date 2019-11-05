@@ -4,7 +4,18 @@ export default function(params) {
   precision highp float;
   
   uniform sampler2D u_gbuffers[${params.numGBuffers}];
-  
+  uniform sampler2D u_lightbuffer;
+  uniform sampler2D u_clusterbuffer;
+  uniform sampler2D u_colmap;
+
+  uniform int u_xSlices;
+  uniform int u_ySlices;
+  uniform int u_zSlices;
+  uniform float u_screenH;
+  uniform float u_screenW;
+  uniform float u_camN;
+  uniform float u_camF;
+  uniform int u_mLpc;
   varying vec2 v_uv;
   
   struct Light {
@@ -60,10 +71,8 @@ export default function(params) {
   
   void main() {
     // TODO: extract data from g buffers and do lighting
-    // vec4 gb0 = texture2D(u_gbuffers[0], v_uv);
-    // vec4 gb1 = texture2D(u_gbuffers[1], v_uv);
-    // vec4 gb2 = texture2D(u_gbuffers[2], v_uv);
-    // vec4 gb3 = texture2D(u_gbuffers[3], v_uv);
+    //vec4 gb0 = texture2D(u_gbuffers[0], v_uv);
+    //vec4 gb1 = texture2D(u_gbuffers[1], v_uv);
 
     gl_FragColor = vec4(v_uv, 0.0, 1.0);
   }

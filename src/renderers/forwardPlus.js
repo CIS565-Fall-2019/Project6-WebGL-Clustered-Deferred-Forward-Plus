@@ -77,6 +77,16 @@ export default class ForwardPlusRenderer extends BaseRenderer {
 
     // TODO: Bind any other shader inputs
 
+    gl.uniform1i(this._shaderProgram.u_xSlices, this._xSlices);
+    gl.uniform1i(this._shaderProgram.u_ySlices, this._ySlices);
+    gl.uniform1i(this._shaderProgram.u_zSlices, this._zSlices);
+    gl.uniform1f(this._shaderProgram.u_screenH, canvas.height);
+    gl.uniform1f(this._shaderProgram.u_screenW, canvas.width);
+    /////////////
+    gl.uniform1f(this._shaderProgram.u_camN, camera.near);
+    gl.uniform1f(this._shaderProgram.u_camF, camera.far);
+    gl.uniform1i(this._shaderProgram.u_mLpC, this._maxLightsPerCluster);
+    gl.uniformMatrix4fv(this._shaderProgram.u_viewMatrix, false, this._viewMatrix);
     // Draw the scene. This function takes the shader program so that the model's textures can be bound to the right inputs
     scene.draw(this._shaderProgram);
   }

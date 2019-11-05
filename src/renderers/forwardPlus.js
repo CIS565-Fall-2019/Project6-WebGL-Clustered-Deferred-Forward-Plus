@@ -6,6 +6,8 @@ import vsSource from '../shaders/forwardPlus.vert.glsl';
 import fsSource from '../shaders/forwardPlus.frag.glsl.js';
 import TextureBuffer from './textureBuffer';
 import BaseRenderer from './base';
+import { MAX_LIGHTS_PER_CLUSTER } from './base.js'
+
 
 export default class ForwardPlusRenderer extends BaseRenderer {
   constructor(xSlices, ySlices, zSlices) {
@@ -15,9 +17,9 @@ export default class ForwardPlusRenderer extends BaseRenderer {
     this._lightTexture = new TextureBuffer(NUM_LIGHTS, 8);
     
     this._shaderProgram = loadShaderProgram(vsSource, fsSource({
-      numLights: NUM_LIGHTS,
+      numLights: NUM_LIGHTS, maxLights: MAX_LIGHTS_PER_CLUSTER, xSlices: xSlices, ySlices: ySlices, zSlices: zSlices,
     }), {
-      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer'],
+      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer', 'u_camNear', 'u_camFar', 'u_screen', 'u_viewMat'],
       attribs: ['a_position', 'a_normal', 'a_uv'],
     });
 
@@ -65,17 +67,19 @@ export default class ForwardPlusRenderer extends BaseRenderer {
     // Upload the camera matrix
     gl.uniformMatrix4fv(this._shaderProgram.u_viewProjectionMatrix, false, this._viewProjectionMatrix);
 
-    // Set the light texture as a uniform input to the shader
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, this._lightTexture.glTexture);
     gl.uniform1i(this._shaderProgram.u_lightbuffer, 2);
 
-    // Set the cluster texture as a uniform input to the shader
     gl.activeTexture(gl.TEXTURE3);
     gl.bindTexture(gl.TEXTURE_2D, this._clusterTexture.glTexture);
     gl.uniform1i(this._shaderProgram.u_clusterbuffer, 3);
 
     // TODO: Bind any other shader inputs
+    gl.uniform2f(this._shaderProgram.u_screen, canvas.width, canvas.height);
+    gl.uniformMatrix4fv(this._shaderProgram.u_viewMat, false, this._viewMatrix);
+    gl.uniform1f(this._shaderProgram.u_camFar, camera.far);
+    gl.uniform1f(this._shaderProgram.u_camNear, camera.near);     
 
     // Draw the scene. This function takes the shader program so that the model's textures can be bound to the right inputs
     scene.draw(this._shaderProgram);

@@ -8,6 +8,14 @@ export default function(params) {
   uniform sampler2D u_colmap;
   uniform sampler2D u_normap;
   uniform sampler2D u_lightbuffer;
+   uniform int u_canvasWidth;
+   uniform int u_canvasHeight;
+   uniform float u_far;
+   uniform float u_near;
+   uniform int u_xSlice;
+   uniform int u_ySlice;
+   uniform int u_zSlice;
+   uniform mat4 u_viewMatrix;
 
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
@@ -81,8 +89,29 @@ export default function(params) {
 
     vec3 fragColor = vec3(0.0);
 
+    vec4 viewPos = u_viewMatrix * vec4(v_position, 1.0);
+
+    // Find the fragment of the cluster and find the lights in it
+    float xStrideCanvas = float(u_canvasWidth)/float(u_xSlice);
+    float yStrideCanvas = float(u_canvasHeight)/float(u_ySlice);
+    float zStrideCanvas = float(u_far - u_near)/float(u_zSlice);
+
+     int xCluster = int(gl_FragCoord.x/xStrideCanvas);
+     int yCluster = int(gl_FragCoord.y/yStrideCanvas);
+     int zCluster = int((-viewPos.z - u_near)/zStrideCanvas);
+
+     int clusterID = xCluster + yCluster * u_xSlice + zCluster * u_xSlice * u_ySlice;
+     int numClusters = u_xSlice * u_ySlice * u_zSlice;
+     float u = float(clusterID + 1) / float(numClusters + 1);
+     int texHeight = int(floor(float(${params.maxLightsPerCluster} + 1) * 0.25)) + 1;
+     int numLights = int(texture2D(u_clusterbuffer, vec2(u, 0)).r);
+
     for (int i = 0; i < ${params.numLights}; ++i) {
-      Light light = UnpackLight(i);
+       if (i >= numLights ){
+         break;
+       }
+      Light light = UnpackLight(int(ExtractFloat(u_clusterbuffer, numClusters, texHeight, clusterID, i + 1)));
+      // Light light = UnpackLight(i);
       float lightDistance = distance(light.position, v_position);
       vec3 L = (light.position - v_position) / lightDistance;
 

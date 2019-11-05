@@ -16,15 +16,16 @@ const params = {
 setRenderer(params.renderer);
 
 function setRenderer(renderer) {
+  let slices = 15;
   switch(renderer) {
     case FORWARD:
       params._renderer = new ForwardRenderer();
       break;
     case FORWARD_PLUS:
-      params._renderer = new ForwardPlusRenderer(15, 15, 15);
+      params._renderer = new ForwardPlusRenderer(slices, slices, slices);
       break;
     case CLUSTERED:
-      params._renderer = new ClusteredRenderer(15, 15, 15);
+      params._renderer = new ClusteredRenderer(slices, slices, slices);
       break;
   }
 }

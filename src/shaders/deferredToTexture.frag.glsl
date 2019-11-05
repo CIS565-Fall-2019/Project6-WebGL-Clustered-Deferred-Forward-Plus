@@ -32,6 +32,7 @@ void main() {
     //gl_FragData[1] = vec4(v_position, 1.0);//vpos
 
     //optimize
+    norm = normalize(norm);
     norm.xy = normalize(norm.xy) * (sqrt(-norm.z * 0.5 + 0.5));
     norm.xy = norm.xy * 0.5 + 0.5;
 

@@ -1,27 +1,45 @@
 WebGL Clustered and Forward+ Shading
 ======================
 
-**University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 5**
+**University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 6**
 
-* (TODO) YOUR NAME HERE
-* Tested on: (TODO) **Google Chrome 222.2** on
-  Windows 22, i7-2222 @ 2.22GHz 22GB, GTX 222 222MB (Moore 2222 Lab)
+* Weiqi Chen
+  * [LinkedIn](https://www.linkedin.com/in/weiqi-ricky-chen-2b04b2ab/)
+* Tested on: Windows 10, i7-8750H @ 2.20GHz 2.21GHz, 16GB, GTX 1050 2GB
+
+![](img/1.gif)
 
 ### Live Online
+[Link](https://WaikeiChan.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/)
 
-[![](img/thumb.png)](http://TODO.github.io/Project5B-WebGL-Deferred-Shading)
+### Demo Video on YouTube
+[Link](https://youtu.be/N86cCf1wIJo)
 
-### Demo Video/GIF
+## Summary
+This is a project of implementing clustered and forward+ shading using WebGL.
 
-[![](img/video.png)](TODO)
+### Deferred Shading
+This technique decouples lighting from scene complexity. It has one shader per material type and one per light type. It only transforms and rasterize each object once and only lights non-occluded objects.
 
-### (TODO: Your README)
+### Forward+ Shading
+This is forward shading with light culling for screen-space tiling. It has 3 passes: depth pre-pass, light culling and final shading. Depth pre-pass goes through the fragment shader and prevent overdraw in light accumulation pass. Light culling computes which light overlaps with which tile. Final shading initiates a Draw call for each material group.
 
-*DO NOT* leave the README to the last minute! It is a crucial part of the
-project, and we will not be able to grade you without a good README.
+### Clustered Shading
+Clustered shading has two more steps then Forward+ shading. It has Depth pre-pass, cluster assignment, finding non-empty clusters, light culling and final shading. Cluster assignment assigns pixels to clusters. Light culling assigns lights to non-empty clusters.
 
-This assignment has a considerable amount of performance analysis compared
-to implementation work. Complete the implementation early to leave time!
+## Performance Analysis
+
+### Shaders Comparison
+
+![](img/p1.png)
+
+The plot above shows the performance of the three shading methods vs the number of lights. Clustered shading has the best performance with increasing number of lights. Forward+ shading has a lower FPS with more lights and forward shading performs the worst among the three.
+
+### Optimization
+
+![](img/p2.png)
+
+Deferred shading can be optimized by using 2-component normal. That means we can now use `vec2` to store the normals. Using a light number of 500, the time-per-frame of clustered shading decreases from 97ms to 72ms. On top of this, we can reconstruct world space position with camera matrices and X/Y/Depth. Adding this optimization decrease the time-per-frame from 72ms to 63ms. The performance is not improved a lot here and this is probably because the reconstruction part takes more time.
 
 
 ### Credits

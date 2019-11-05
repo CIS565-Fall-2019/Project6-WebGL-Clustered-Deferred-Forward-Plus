@@ -121,8 +121,6 @@ export default function(params) {
       int lightId = int(ExtractFloat(u_clusterbuffer, ${params.clusterTextureWidth}, ${params.clusterTextureHeight}, index, lightIndex));
       
       Light light = UnpackLight(lightId);
-      vec3 lightDir  = normalize(light.position - v_position);
-      vec3 hafl_dir_vec  = normalize((lightDir + u_eyePos)/2.0);
 
       float lightDistance = distance(light.position, v_position);
       vec3 L = (light.position - v_position) / lightDistance;

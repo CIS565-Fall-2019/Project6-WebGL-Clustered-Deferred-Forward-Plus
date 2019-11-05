@@ -9,13 +9,13 @@ WebGL Clustered and Forward+ Shading
   *  [LinkedIn] (https://www.linkedin.com/in/vaibhav-arcot-129829167/)
 * Tested on: Windows 10, i7-7700HQ @ 2.8GHz (3.8 Boost) 32GB, External GTX 1080Ti, 11G (My personal laptop)
 
-### Live Online
-
-[![](img/thumb.png)](http://TODO.github.io/Project5B-WebGL-Deferred-Shading)
-
 ### Demo Video/GIF
 
-[![](img/video.png)](TODO)
+![Demo image](./imgs/forward_plus.gif)
+
+### Live Online
+
+[![Live demo of clustered](/imgs/clusteres.gif)](https://black-phoenix.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/ )
 
 ## Overview
 This repo contains a WebGL based forward and differed renderer. A live demo of the final results can be found at [this link]( https://black-phoenix.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/ ). 
@@ -50,7 +50,15 @@ Once we have H (can be calculated using the equation below), we replace R.V with
 
 
 
-## Results
+## Performance analysis
+
+For performance analysis, I decided to take the FPS vs number of lights for different rendering approaches. The plot is shown below. As expected, Forward performs the worst, while Forward+ and clustered perform extremely similarly.
+
+![](./imgs/fps_results.png)
+
+Next, I decided to measure the MS required to render a single frame, shown below.
+
+![](./imgs/ms_results.png)
 
 
 ### Credits

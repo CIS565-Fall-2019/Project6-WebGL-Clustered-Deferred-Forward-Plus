@@ -1,28 +1,55 @@
+![](img/demo.gif)
+
 WebGL Clustered and Forward+ Shading
 ======================
 
 **University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 5**
 
-* (TODO) YOUR NAME HERE
-* Tested on: (TODO) **Google Chrome 222.2** on
-  Windows 22, i7-2222 @ 2.22GHz 22GB, GTX 222 222MB (Moore 2222 Lab)
+* Zheyuan Xie
+* Tested on: Windows 10 Pro, i7-7700HQ @ 2.80GHz, 16GB, GTX 1050 2GB (Dell XPS 15 9560)
 
-### Live Online
+### Live Demo
 
-[![](img/thumb.png)](http://TODO.github.io/Project5B-WebGL-Deferred-Shading)
+[![](img/thumb.png)](https://zheyuanxie.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/)
 
-### Demo Video/GIF
+Use keyboard shortcut to switch between rendering mode:
+ - <1> - Switch to *simple forward rendering*.
+ - <2> - Switch to *clustered forward rendering*.
+ - <3> - Switch to *clustered deferred rendering*.
+ - <4> - Switch to *clustered deferred rendering with Blinn-Phong shading*.
 
-[![](img/video.png)](TODO)
+### Video Demo
 
-### (TODO: Your README)
+Link to video: [https://youtu.be/wNil31n5d4k](https://youtu.be/wNil31n5d4k)
 
-*DO NOT* leave the README to the last minute! It is a crucial part of the
-project, and we will not be able to grade you without a good README.
+### Introduction
 
-This assignment has a considerable amount of performance analysis compared
-to implementation work. Complete the implementation early to leave time!
+#### Clustered Rendering
+In clustered shading. Instead of performing light culling checks on 2D screen tiles, we use 3D cells (clusteres). The screen is divided into tiles and the frustum is sliced along the z-axis as well. In the rendering pass, each pixel is assigned into a cluster, only lights affecting the assigned cluster will be calculated. This significantly reduce the amount of computation when there are many lights.
 
+
+
+#### Deferred Shading
+Deferred shading is a screen-space shading technique. Positions, normals, and material properties are fisrt rendered into the geometry buffer (G-buffer). After this, a pixel shader computes the lighting at each pixel using the information of the geometry buffer. Its primary advantage over forward shading is the decoupling of scene geometry from lighting.
+
+
+
+### Features
+
+ - **Clustered Forward (Forward Plus) Renderer**: Populate `clusterTexture` to store number of lights and list of lights for each cluster.
+ - **Clustered Deferred Renderer**: Store vertex color, position, and normal into g-buffer. Do clustered rendering with information from g-buffer.
+ - Blinn-Phong Shading for clustered deferred renderer. (New Effect)
+ - Pack value into `vec4` and use 2-component normals. (Optimization)
+
+### Performance Analysis
+
+![](img/performance.png)
+
+ - Simple forward rendering has the worst performance.
+ - Clustered forward rendering has more advantage as the number of lights increases.
+ - Clustered deferred rendering is generally much more faster than the previous two methods at the cost of higher memory bandwitdh.
+
+ Blinn-Phong shading and the use of 2-component normals has no significant performance impact in terms of time spent per frame. Since Blinn-Phong shading requires additional computation for specular component, the use of 2-componetn normals requires extra computation for encoding and decoding, these features will decrease the rendering performance. However, these extra computational overhead did not affects FPS to a noticible extent.
 
 ### Credits
 

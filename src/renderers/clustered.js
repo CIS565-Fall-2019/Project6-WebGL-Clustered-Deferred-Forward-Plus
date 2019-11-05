@@ -8,11 +8,13 @@ import QuadVertSource from '../shaders/quad.vert.glsl';
 import fsSource from '../shaders/deferred.frag.glsl.js';
 import TextureBuffer from './textureBuffer';
 import BaseRenderer from './base';
+import { MAX_LIGHTS_PER_CLUSTER } from './base.js';
 
-export const NUM_GBUFFERS = 4;
+export const NUM_GBUFFERS = 2;  // 2-component normal
+// export const NUM_GBUFFERS = 3;  // 3-component normal
 
 export default class ClusteredRenderer extends BaseRenderer {
-  constructor(xSlices, ySlices, zSlices) {
+  constructor(xSlices, ySlices, zSlices, blinnPhong) {
     super(xSlices, ySlices, zSlices);
     
     this.setupDrawBuffers(canvas.width, canvas.height);
@@ -28,8 +30,15 @@ export default class ClusteredRenderer extends BaseRenderer {
     this._progShade = loadShaderProgram(QuadVertSource, fsSource({
       numLights: NUM_LIGHTS,
       numGBuffers: NUM_GBUFFERS,
+      maxNumLights: MAX_LIGHTS_PER_CLUSTER,
+      xSlices: this._xSlices,
+      ySlices: this._ySlices,
+      zSlices: this._zSlices,
+      blinnPhong: blinnPhong,
     }), {
-      uniforms: ['u_gbuffers[0]', 'u_gbuffers[1]', 'u_gbuffers[2]', 'u_gbuffers[3]'],
+      uniforms: ['u_lightbuffer', 'u_gbuffers[0]', 'u_gbuffers[1]', 'u_gbuffers[2]', 'u_gbuffers[3]',
+                 'u_clusterbuffer', 'u_canvasWidth', 'u_canvasHeight', 'u_cameraNear', 'u_cameraFar',
+                 'u_cameraPosition'],
       attribs: ['a_uv'],
     });
 
@@ -71,7 +80,7 @@ export default class ClusteredRenderer extends BaseRenderer {
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.FLOAT, null);
       gl.bindTexture(gl.TEXTURE_2D, null);
 
-      gl.framebufferTexture2D(gl.FRAMEBUFFER, attachments[i], gl.TEXTURE_2D, this._gbuffers[i], 0);      
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, attachments[i], gl.TEXTURE_2D, this._gbuffers[i], 0);
     }
 
     if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
@@ -154,9 +163,30 @@ export default class ClusteredRenderer extends BaseRenderer {
     gl.useProgram(this._progShade.glShaderProgram);
 
     // TODO: Bind any other shader inputs
+    // Set the light texture as a uniform input to the shader
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, this._lightTexture.glTexture);
+    gl.uniform1i(this._progShade.u_lightbuffer, 2);
+
+    // Set the cluster texture as a uniform input to the shader
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, this._clusterTexture.glTexture);
+    gl.uniform1i(this._progShade.u_clusterbuffer, 3);
+
+    // Upload canvas dimension
+    gl.uniform1i(this._progShade.u_canvasWidth, canvas.width);
+    gl.uniform1i(this._progShade.u_canvasHeight, canvas.height);
+
+    // Upload frustum limitation
+    gl.uniform1f(this._progShade.u_cameraNear, camera.near);
+    gl.uniform1f(this._progShade.u_cameraFar, camera.far);
+
+    // Upload camera position
+    gl.uniform3f(this._progShade.u_cameraPosition,
+                 camera.position.x, camera.position.y, camera.position.z);
 
     // Bind g-buffers
-    const firstGBufferBinding = 0; // You may have to change this if you use other texture slots
+    const firstGBufferBinding = 4; // You may have to change this if you use other texture slots
     for (let i = 0; i < NUM_GBUFFERS; i++) {
       gl.activeTexture(gl[`TEXTURE${i + firstGBufferBinding}`]);
       gl.bindTexture(gl.TEXTURE_2D, this._gbuffers[i]);

@@ -6,6 +6,7 @@ import vsSource from '../shaders/forwardPlus.vert.glsl';
 import fsSource from '../shaders/forwardPlus.frag.glsl.js';
 import TextureBuffer from './textureBuffer';
 import BaseRenderer from './base';
+import { MAX_LIGHTS_PER_CLUSTER } from './base.js';
 
 export default class ForwardPlusRenderer extends BaseRenderer {
   constructor(xSlices, ySlices, zSlices) {
@@ -16,8 +17,12 @@ export default class ForwardPlusRenderer extends BaseRenderer {
     
     this._shaderProgram = loadShaderProgram(vsSource, fsSource({
       numLights: NUM_LIGHTS,
+      maxNumLights: MAX_LIGHTS_PER_CLUSTER,
+      xSlices: this._xSlices,
+      ySlices: this._ySlices,
+      zSlices: this._zSlices,
     }), {
-      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer'],
+      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer', 'u_canvasWidth', 'u_canvasHeight', 'u_cameraNear', 'u_cameraFar'],
       attribs: ['a_position', 'a_normal', 'a_uv'],
     });
 
@@ -76,6 +81,13 @@ export default class ForwardPlusRenderer extends BaseRenderer {
     gl.uniform1i(this._shaderProgram.u_clusterbuffer, 3);
 
     // TODO: Bind any other shader inputs
+    // Upload canvas dimension
+    gl.uniform1i(this._shaderProgram.u_canvasWidth, canvas.width);
+    gl.uniform1i(this._shaderProgram.u_canvasHeight, canvas.height);
+
+    // Upload frustum limitation
+    gl.uniform1f(this._shaderProgram.u_cameraNear, camera.near);
+    gl.uniform1f(this._shaderProgram.u_cameraFar, camera.far);
 
     // Draw the scene. This function takes the shader program so that the model's textures can be bound to the right inputs
     scene.draw(this._shaderProgram);

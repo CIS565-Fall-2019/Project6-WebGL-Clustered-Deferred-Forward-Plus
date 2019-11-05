@@ -15,7 +15,7 @@ WebGL Clustered and Forward+ Shading
 
 ### Live Online
 
-[![Live demo of clustered](/imgs/clusteres.gif)](https://black-phoenix.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/ )
+[![Live demo of clustered](/imgs/clustered.gif)](https://black-phoenix.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/ )
 
 ## Overview
 This repo contains a WebGL based forward and differed renderer. A live demo of the final results can be found at [this link]( https://black-phoenix.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/ ). 
@@ -54,11 +54,11 @@ Once we have H (can be calculated using the equation below), we replace R.V with
 
 For performance analysis, I decided to take the FPS vs number of lights for different rendering approaches. The plot is shown below. As expected, Forward performs the worst, while Forward+ and clustered perform extremely similarly.
 
-![](./imgs/fps_results.png)
+![](./imgs/fps_results.PNG)
 
 Next, I decided to measure the MS required to render a single frame, shown below.
 
-![](./imgs/ms_results.png)
+![](./imgs/ms_results.PNG)
 
 
 ### Credits

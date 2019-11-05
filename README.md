@@ -10,12 +10,10 @@ WebGL Clustered and Forward+ Shading
 ![](img/1.gif)
 
 ### Live Online
+[Link](https://WaikeiChan.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/)
 
-[![](img/thumb.png)](http://TODO.github.io/Project5B-WebGL-Deferred-Shading)
-
-### Demo Video/GIF
-
-![](img/2.gif)
+### Demo Video on YouTube
+[Link](https://youtu.be/N86cCf1wIJo)
 
 ## Summary
 This is a project of implementing clustered and forward+ shading using WebGL.

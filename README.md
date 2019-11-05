@@ -11,6 +11,9 @@ WebGL Clustered and Forward+ Shading
 
 ![Demo](https://drive.google.com/file/d/1mW0WYJQDxQr8r5rZTnxsdw9pzgSF8_dU/view?usp=sharing)
 
+Copy this link in your browser if above link does not work.
+https://drive.google.com/file/d/1mW0WYJQDxQr8r5rZTnxsdw9pzgSF8_dU/view?usp=sharing
+
 ### Features
 
 - Forward Plus rendering

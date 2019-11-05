@@ -14,7 +14,7 @@ WebGL Clustered and Forward+ Shading
 
 ### Demo Video/GIF
 
-video: https://vimeo.com/370961664
+video:  https://vimeo.com/371025863 
 
 ## Feature
 

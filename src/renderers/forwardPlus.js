@@ -6,6 +6,7 @@ import vsSource from '../shaders/forwardPlus.vert.glsl';
 import fsSource from '../shaders/forwardPlus.frag.glsl.js';
 import TextureBuffer from './textureBuffer';
 import BaseRenderer from './base';
+import { MAX_LIGHTS_PER_CLUSTER } from './base';
 
 export default class ForwardPlusRenderer extends BaseRenderer {
   constructor(xSlices, ySlices, zSlices) {
@@ -13,11 +14,15 @@ export default class ForwardPlusRenderer extends BaseRenderer {
 
     // Create a texture to store light data
     this._lightTexture = new TextureBuffer(NUM_LIGHTS, 8);
-    
     this._shaderProgram = loadShaderProgram(vsSource, fsSource({
       numLights: NUM_LIGHTS,
+      maxLights: MAX_LIGHTS_PER_CLUSTER,
+      slices_x: xSlices,
+      slices_y: ySlices,
+      slices_z: zSlices
     }), {
-      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer'],
+      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer', 
+                'u_viewMatrix','u_dimension','u_elementCount', 'u_pixelsPerElement', 'u_strideZ', 'u_near'],
       attribs: ['a_position', 'a_normal', 'a_uv'],
     });
 
@@ -76,6 +81,13 @@ export default class ForwardPlusRenderer extends BaseRenderer {
     gl.uniform1i(this._shaderProgram.u_clusterbuffer, 3);
 
     // TODO: Bind any other shader inputs
+    gl.uniformMatrix4fv(this._shaderProgram.u_viewMtrix, false, this._viewMatrix);    
+    gl.uniform2f(this._shaderProgram.u_dimension, canvas.width, canvas.height);
+    gl.uniform1f(this._shaderProgram.u_near, camera.near); 
+    
+    gl.uniform1i(this._shaderProgram.u_elementCount, this._clusterTexture._elementCount);
+    gl.uniform1i(this._shaderProgram.u_pixelsPerElement, this._clusterTexture._pixelsPerElement);
+    gl.uniform1f(this._shaderProgram.u_strideZ, (camera.far - camera.near) / this._zSlices);
 
     // Draw the scene. This function takes the shader program so that the model's textures can be bound to the right inputs
     scene.draw(this._shaderProgram);

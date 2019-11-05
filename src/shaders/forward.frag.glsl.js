@@ -68,7 +68,7 @@ export default function(params) {
       return 0.0;
     }
   }
-
+  
   void main() {
     vec3 albedo = texture2D(u_colmap, v_uv).rgb;
     vec3 normap = texture2D(u_normap, v_uv).xyz;

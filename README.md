@@ -3,26 +3,40 @@ WebGL Clustered and Forward+ Shading
 
 **University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 5**
 
-* (TODO) YOUR NAME HERE
-* Tested on: (TODO) **Google Chrome 222.2** on
-  Windows 22, i7-2222 @ 2.22GHz 22GB, GTX 222 222MB (Moore 2222 Lab)
+* Saket Karve
+* Tested on: (TODO) **Google Chrome Version 78.0.3904.70 (Official Build) (64-bit)** on
+  MacBook Pro, 2.3 GHz Intel Core i5 @ 8GB, Intel Iris Plus Graphics 640 1536 MB
 
-### Live Online
+### Demo GIF
 
-[![](img/thumb.png)](http://TODO.github.io/Project5B-WebGL-Deferred-Shading)
+![Demo](https://drive.google.com/file/d/1mW0WYJQDxQr8r5rZTnxsdw9pzgSF8_dU/view?usp=sharing)
 
-### Demo Video/GIF
+### Features
 
-[![](img/video.png)](TODO)
+- Forward Plus rendering
+- Clustered rendering
+- Clustered rendering - optimized g-buffer
+- Performance Analysis
 
-### (TODO: Your README)
+### Output
 
-*DO NOT* leave the README to the last minute! It is a crucial part of the
-project, and we will not be able to grade you without a good README.
+**Forward Plus**
 
-This assignment has a considerable amount of performance analysis compared
-to implementation work. Complete the implementation early to leave time!
+![](models/sponza/forwardplus.png)
 
+**Clustered**
+
+![](models/sponza/clustered.png)
+
+### Performance Analysis
+
+![](models/sponza/graph2.png)
+
+The above graph shows a comparison between the three rendering techinques with increasing number of lights. As expected, the clustered rendering has the best performance. Forward plus has a significant improvement over forward rendering. Clustered rendering is a deffered rendering technique and is optimized in terms of the shading is done based on a smartly filled g-buffer in the first pass. 
+
+![](models/sponza/graph3.png)
+
+Optimizing the g-buffer to utilize as much we can in each vec4 and passsing as minimum information as possible helps in improveing the performance further. It can be seen that the optimized version is better than the standard clustered rendering in most cases. The effect is not significant for more number of lights.
 
 ### Credits
 

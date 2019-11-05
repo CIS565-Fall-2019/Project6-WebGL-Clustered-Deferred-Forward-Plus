@@ -6,6 +6,7 @@ import vsSource from '../shaders/forwardPlus.vert.glsl';
 import fsSource from '../shaders/forwardPlus.frag.glsl.js';
 import TextureBuffer from './textureBuffer';
 import BaseRenderer from './base';
+import { MAX_LIGHTS_PER_CLUSTER } from './base';
 
 export default class ForwardPlusRenderer extends BaseRenderer {
   constructor(xSlices, ySlices, zSlices) {
@@ -16,9 +17,15 @@ export default class ForwardPlusRenderer extends BaseRenderer {
     
     this._shaderProgram = loadShaderProgram(vsSource, fsSource({
       numLights: NUM_LIGHTS,
+      maxLightsPerCluster: MAX_LIGHTS_PER_CLUSTER,
+      u_xslices: xSlices,
+      u_yslices: ySlices,
+      u_zslices: zSlices,
     }), {
-      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer'],
+      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer', 'u_view_matrix', 'u_screenWidth', 'u_screenHeight','u_camera_far', 'u_camera_near'],
       attribs: ['a_position', 'a_normal', 'a_uv'],
+      //uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer'],
+      //attribs: ['a_position', 'a_normal', 'a_uv'],
     });
 
     this._projectionMatrix = mat4.create();
@@ -64,6 +71,7 @@ export default class ForwardPlusRenderer extends BaseRenderer {
 
     // Upload the camera matrix
     gl.uniformMatrix4fv(this._shaderProgram.u_viewProjectionMatrix, false, this._viewProjectionMatrix);
+    gl.uniformMatrix4fv(this._shaderProgram.u_view_matrix, false, this._viewMatrix);
 
     // Set the light texture as a uniform input to the shader
     gl.activeTexture(gl.TEXTURE2);
@@ -76,6 +84,14 @@ export default class ForwardPlusRenderer extends BaseRenderer {
     gl.uniform1i(this._shaderProgram.u_clusterbuffer, 3);
 
     // TODO: Bind any other shader inputs
+    gl.uniform1i(this._shaderProgram.u_screenWidth, canvas.width);
+    gl.uniform1i(this._shaderProgram.u_screenHeight, canvas.height);
+    gl.uniform1f(this._shaderProgram.u_camera_near, camera.near);
+    gl.uniform1f(this._shaderProgram.u_camera_far, camera.far);
+    // gl.uniform1f(this._shaderProgram.u_xslices, this.xSlices);
+    // gl.uniform1f(this._shaderProgram.u_yslices, this.ySlices);
+    // gl.uniform1f(this._shaderProgram.u_zslices, this.zSlices);
+
 
     // Draw the scene. This function takes the shader program so that the model's textures can be bound to the right inputs
     scene.draw(this._shaderProgram);

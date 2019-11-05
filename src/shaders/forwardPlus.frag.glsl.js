@@ -1,7 +1,7 @@
 export default function(params) {
   return `
   // TODO: This is pretty much just a clone of forward.frag.glsl.js
-
+  
   #version 100
   precision highp float;
 
@@ -11,6 +11,15 @@ export default function(params) {
 
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
+
+  uniform mat4 u_view_matrix;
+  uniform int u_screenWidth;
+  uniform int u_screenHeight;
+  uniform float u_camera_far;
+  uniform float u_camera_near;
+  // uniform float u_xslices;
+  // uniform float u_yslices;
+  // uniform float u_zslices;
 
   varying vec3 v_position;
   varying vec3 v_normal;
@@ -79,10 +88,34 @@ export default function(params) {
     vec3 normap = texture2D(u_normap, v_uv).xyz;
     vec3 normal = applyNormalMap(v_normal, normap);
 
+    vec4 view_position = u_view_matrix * vec4(v_position, 1.0);
+    view_position.z = -view_position.z;
+
+    float xStride = float(u_screenWidth) / float(${params.u_xslices});
+    float yStride = float(u_screenHeight) / float(${params.u_yslices});
+    float zStride = float(u_camera_far - u_camera_near) / float(${params.u_zslices});
+
+    int index_x = int(gl_FragCoord.x / xStride);
+    int index_y = int(gl_FragCoord.y / yStride);
+    int index_z = int((view_position.z - u_camera_near) / zStride);
+
+    int index_in_buffer = index_x + index_y * ${params.u_xslices} + index_z * ${params.u_xslices} * ${params.u_yslices};
+    int number_of_tiles = ${params.u_xslices} * ${params.u_yslices} * ${params.u_zslices};
+    float u = float(index_in_buffer + 1) / float(number_of_tiles + 1);
+    int texHeight = int(ceil(float(${params.maxLightsPerCluster} + 1) / 4.0));
+    int number_of_lights = int(texture2D(u_clusterbuffer, vec2(u, 0)).r);
+
     vec3 fragColor = vec3(0.0);
 
     for (int i = 0; i < ${params.numLights}; ++i) {
-      Light light = UnpackLight(i);
+      if(i >= number_of_lights){
+        break;
+      }
+
+      int light_index = int(ExtractFloat(u_clusterbuffer, number_of_tiles, texHeight, index_in_buffer, i + 1));
+
+      Light light = UnpackLight(light_index);
+      //Light light = UnpackLight(i);
       float lightDistance = distance(light.position, v_position);
       vec3 L = (light.position - v_position) / lightDistance;
 

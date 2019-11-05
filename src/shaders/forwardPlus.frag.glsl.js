@@ -9,12 +9,22 @@ export default function(params) {
   uniform sampler2D u_normap;
   uniform sampler2D u_lightbuffer;
 
+
+  uniform int u_xSlices;
+  uniform int u_ySlices;
+  uniform int u_zSlices;
+  uniform float u_screenH;
+  uniform float u_screenW;
+  uniform float u_camN;
+  uniform float u_camF;
+
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
 
   varying vec3 v_position;
   varying vec3 v_normal;
   varying vec2 v_uv;
+  uniform mat4 u_viewMatrix;
 
   vec3 applyNormalMap(vec3 geomnor, vec3 normap) {
     normap = normap * 2.0 - 1.0;
@@ -78,6 +88,8 @@ export default function(params) {
     vec3 albedo = texture2D(u_colmap, v_uv).rgb;
     vec3 normap = texture2D(u_normap, v_uv).xyz;
     vec3 normal = applyNormalMap(v_normal, normap);
+
+    
 
     vec3 fragColor = vec3(0.0);
 

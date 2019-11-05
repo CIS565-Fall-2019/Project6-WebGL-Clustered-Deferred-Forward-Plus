@@ -11,6 +11,9 @@ export default function(params) {
 
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
+  uniform mat4 u_viewProjectionMatrix;
+  uniform mat4 u_viewMatrix;
+  uniform vec2 u_cameranearandfar;
 
   varying vec3 v_position;
   varying vec3 v_normal;
@@ -81,9 +84,40 @@ export default function(params) {
 
     vec3 fragColor = vec3(0.0);
 
-    for (int i = 0; i < ${params.numLights}; ++i) {
-      Light light = UnpackLight(i);
-      float lightDistance = distance(light.position, v_position);
+    //read the cluster texture to decrease the count of the light we need to deal with
+    int x_slides = int(${params.xslices});
+    int y_slides = int(${params.yslices});
+    int z_slides = int(${params.zslices});
+
+    vec4 incamerap = u_viewMatrix * vec4(v_position, 1.0);
+    incamerap[2] *= -1.0;//note!!!!!
+
+    //get cluster index
+    float stridewid = float(${params.can_wid}) / float(${params.xslices});
+    float stridehei = float(${params.can_hei}) / float(${params.yslices});
+    float stridedepth = (u_cameranearandfar[1] - u_cameranearandfar[0]) / float(${params.zslices});
+
+    int indx = int(gl_FragCoord.x / stridewid);
+    int indy = int(gl_FragCoord.y / stridehei); 
+    int indz = int((incamerap[2] - u_cameranearandfar[0]) / stridedepth);
+    
+    int cluster_width =  int(x_slides * y_slides * z_slides);
+    int cluster_height =  (int(${params.max_num}) + 1) / 4 + 1;
+    
+    int ind3d = int(indx + indy * x_slides + indz * x_slides * y_slides);
+    float cluster_u = float(ind3d + 1) / float(int(${params.numcluster}) + 1);
+    float cluster_v = float(0 + 1) / float(cluster_height + 1);
+    int light_count = int(texture2D(u_clusterbuffer, vec2(cluster_u, cluster_v))[0]);//count ind1-3 
+    
+    for (int i = 1; i <= int(${params.max_num}); i++) {
+      if (i > light_count) {
+        break;
+      }
+      int col = i - int(i / 4);
+      int light_ind = int(ExtractFloat(u_clusterbuffer, cluster_width, cluster_height, ind3d, i));
+
+      Light light = UnpackLight(light_ind);//get light info
+      float lightDistance = distance(light.position, v_position);//distance between light and vertice
       vec3 L = (light.position - v_position) / lightDistance;
 
       float lightIntensity = cubicGaussian(2.0 * lightDistance / light.radius);

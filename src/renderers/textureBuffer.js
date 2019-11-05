@@ -25,7 +25,7 @@ export default class TextureBuffer {
     this._buffer = new Float32Array(elementCount * 4 * this._pixelsPerElement);
   }
 
-  get glTexture() {
+  get glTexture() { 
     return this._glTexture;
   }
 

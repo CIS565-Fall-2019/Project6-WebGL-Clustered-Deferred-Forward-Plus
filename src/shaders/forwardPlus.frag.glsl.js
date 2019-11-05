@@ -17,7 +17,7 @@ export default function(params) {
   uniform float u_screenW;
   uniform float u_camN;
   uniform float u_camF;
-  uniform int u_mLpC
+  uniform int u_mLpC;
 
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;

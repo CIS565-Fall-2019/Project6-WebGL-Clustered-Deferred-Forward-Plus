@@ -91,9 +91,7 @@ export default class ForwardPlusRenderer extends BaseRenderer {
     gl.uniform1f(this._shaderProgram.u_y_slices,      this._ySlices);
     gl.uniform1f(this._shaderProgram.u_z_slices,      this._zSlices);
     gl.uniform1f(this._shaderProgram.u_max_lights,    MAX_LIGHTS_PER_CLUSTER);
-
     gl.uniform2f(this._shaderProgram.u_dim, canvas.width, canvas.height);
-
     gl.uniformMatrix4fv(this._shaderProgram.u_view_matrix, false, this._viewMatrix);
 
     // Draw the scene. This function takes the shader program so that the model's textures can be bound to the right inputs

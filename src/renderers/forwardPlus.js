@@ -21,7 +21,7 @@ export default class ForwardPlusRenderer extends BaseRenderer {
       _zSlices: zSlices,
       maxNumLights: MAX_LIGHTS_PER_CLUSTER,
     }), {
-      uniforms: ['u_viewProjectionMatrix', 'u_viewMatrix', 'u_near', 'u_far', 'u_fov', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer'],
+      uniforms: ['u_viewProjectionMatrix', 'u_viewMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer'],
       attribs: ['a_position', 'a_normal', 'a_uv'],
     });
 
@@ -68,7 +68,6 @@ export default class ForwardPlusRenderer extends BaseRenderer {
 
     // Upload the camera matrix
     gl.uniformMatrix4fv(this._shaderProgram.u_viewProjectionMatrix, false, this._viewProjectionMatrix);
-    gl.uniformMatrix4fv(this._shaderProgram.u_viewMatrix, false, this._viewMatrix);
 
     gl.uniform1i(this._shaderProgram.u_near, camera.near);
     gl.uniform1i(this._shaderProgram.u_far, camera.far);

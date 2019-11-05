@@ -49,16 +49,20 @@ export default class BaseRenderer {
       vec4.divide(max, max, clusterSizes);
       vec4.floor(min, min);
       vec4.floor(max, max);
-      min = vec4.fromValues(Math.max(Math.min(min[0], this._xSlices - 1), 0), Math.max(Math.min(min[1], this._ySlices - 1), 0), Math.max(Math.min(min[2], this._zSlices - 1), 0), 1);
-      max = vec4.fromValues(Math.max(Math.min(max[0], this._xSlices - 1), 0), Math.max(Math.min(max[1], this._ySlices - 1), 0), Math.max(Math.min(max[2], this._zSlices - 1), 0), 1);
+      min = vec4.fromValues(Math.max(Math.min(min[0], this._xSlices - 1), 0) - 1, Math.max(Math.min(min[1], this._ySlices - 1), 0) - 1, Math.max(Math.min(min[2], this._zSlices - 1), 0) - 1, 1);
+      max = vec4.fromValues(Math.max(Math.min(max[0], this._xSlices - 1), 0) + 2, Math.max(Math.min(max[1], this._ySlices - 1), 0) + 2, Math.max(Math.min(max[2], this._zSlices - 1), 0) + 2, 1);
 
       for (let z = min[2]; z <= max[2]; ++z) {
         for (let y = min[1]; y <= max[1]; ++y) {
           for (let x = min[0]; x <= max[0]; ++x) {
             let i = x + y * this._xSlices + z * this._xSlices * this._ySlices;
             let count = this._clusterTexture.buffer[this._clusterTexture.bufferIndex(i, 0)] + 1;
-            this._clusterTexture.buffer[this._clusterTexture.bufferIndex(i, 0)] = count;
-            this._clusterTexture.buffer[this._clusterTexture.bufferIndex(i, count)] = l;
+            if (count <= MAX_LIGHTS_PER_CLUSTER) {
+              let countMod = Math.floor(count % 4);
+              let countDiv = Math.floor(count / 4);
+              this._clusterTexture.buffer[this._clusterTexture.bufferIndex(i, 0)] = count;
+              this._clusterTexture.buffer[this._clusterTexture.bufferIndex(i, countDiv) + countMod] = l;
+            }
           }
         }
       }

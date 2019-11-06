@@ -6,7 +6,6 @@ export default function(params) {
   uniform sampler2D u_gbuffers[${params.numGBuffers}];
   uniform sampler2D u_lightbuffer;
   uniform sampler2D u_clusterbuffer;
-  uniform sampler2D u_colmap;
 
   uniform int u_xSlices;
   uniform int u_ySlices;
@@ -71,13 +70,21 @@ export default function(params) {
   void main() {
     // TODO: extract data from g buffers and do lighting
     // Optimized
+    //vec4 gb0 = texture2D(u_gbuffers[0], v_uv);
+    //vec4 gb1 = texture2D(u_gbuffers[1], v_uv);
+
+    //vec3 albedo = vec3(gb0.w, gb1.xy);
+    //vec3 v_position = gb0.rgb;
+    //vec3 norm = vec3(gb1.zw, sqrt(1.0 - gb1.z * gb1.z - gb1.w * gb1.w));
+
     vec4 gb0 = texture2D(u_gbuffers[0], v_uv);
     vec4 gb1 = texture2D(u_gbuffers[1], v_uv);
+    vec4 gb2 = texture2D(u_gbuffers[2], v_uv);
 
-    vec3 albedo = vec3(gb0.w, gb1.xy);
     vec3 v_position = gb0.rgb;
-    vec3 norm = vec3(gb1.zw, sqrt(1.0 - gb1.z * gb1.z - gb1.w * gb1.w));
-    
+    vec3 norm = gb1.rgb;
+    vec3 albedo = gb2.rgb;
+
     vec4 position = u_viewMatrix * vec4(v_position.xyz, 1.0);
     position.z *= -1.0;
 

@@ -19,7 +19,7 @@ export default class ForwardPlusRenderer extends BaseRenderer {
       numLights: NUM_LIGHTS,
       maxLightsPerCluster: MAX_LIGHTS_PER_CLUSTER,
     }), {
-      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer'],
+      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer','u_xSlices','u_ySlices','u_zSlices','u_viewMatrix','u_screenH','u_screenW','u_camN','u_camF'],
       attribs: ['a_position', 'a_normal', 'a_uv'],
     });
 

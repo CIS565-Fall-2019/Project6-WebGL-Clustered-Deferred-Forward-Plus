@@ -24,13 +24,13 @@ void main() {
     // TODO: populate your g buffer
 
     //Optimized
-    gl_FragData[0] = vec4(v_position, col.x);
-    gl_FragData[1] = vec4(col.yz, v_normal.xy); //Compute z of norm from xy (z = sqrt(1 - x^2 - y^2))
+    //gl_FragData[0] = vec4(v_position, col.x);
+    //gl_FragData[1] = vec4(col.yz, v_normal.xy); //Compute z of norm from xy (z = sqrt(1 - x^2 - y^2))
     
 
-    //gl_FragData[0] = vec4(v_position, 0);
-    //gl_FragData[1] = vec4(norm, 0);
-    //gl_FragData[2] = vec4(col, 0);
+    gl_FragData[0] = vec4(v_position, 0);
+    gl_FragData[1] = vec4(norm, 0);
+    gl_FragData[2] = vec4(col, 0);
 
     
 }

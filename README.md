@@ -42,16 +42,21 @@ The following image shows how the 3D visible space is divided into grids to asig
 
 #### Effects
 We also implement the [Blinn–Phong](https://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_reflection_model) reflection model that combines diffuse and specular lighting.  It can be seen as an approximation to the Phong model where a halfway vector between the viewer and light-source vectors are computed for faster calculations instead of R ⋅ V {\displaystyle R\cdot V} R\cdot V. 
-![](img/phong.png)
-![](img/h.png)
+<p align="center">
+  <img src="img/phong.png" width=700>
+</p>
+<p align="center">
+  <img src="img/h.png" width=700>
+</p>
 This dot product represents the cosine of an angle that is half of the angle represented by Phong's dot product if V, L, N and R all lie in the same plane. This relation between the angles remains approximately true when the vectors don't lie in the same plane, especially when the angles are small. 
 
 ### Analysis
 We comapre the three rendering pipelines by varying the number of lights rendered and computign the FPS. We can notice that forward is the slowest. 
 Clustered/defered is faster than forward+ in most cases in the current setting but it may not always be true. 
 Clustered also more memory intensive as comapred to forward plus. 
-![](img/plot.png)
-
+<p align="center">
+  <img src="img/plot.png">
+</p>
 We also compute the number of lights v/s rendering time (miliseconds).
 We make similiar observstions here. Clustering and Forward plus are considerably faster than forward. It is difficult to comapre Clustering and Forward plus.
 ![](img/plot2.png)

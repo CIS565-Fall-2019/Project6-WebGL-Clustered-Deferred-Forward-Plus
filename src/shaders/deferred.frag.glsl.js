@@ -7,15 +7,15 @@ export default function(params) {
   uniform sampler2D u_lightbuffer;
   uniform sampler2D u_clusterbuffer;
 
-  uniform int u_xSlices;
-  uniform int u_ySlices;
-  uniform int u_zSlices;
-  uniform float u_screenH;
-  uniform float u_screenW;
-  uniform float u_camN;
+  uniform int u_screenW;
+  uniform int u_screenH;
   uniform float u_camF;
-  varying vec2 v_uv;
+  uniform float u_camN;
   
+  varying vec2 v_uv;
+  uniform mat4 u_viewMatrix;
+
+
   struct Light {
     vec3 position;
     float radius;
@@ -42,8 +42,8 @@ export default function(params) {
   Light UnpackLight(int index) {
     Light light;
     float u = float(index + 1) / float(${params.numLights + 1});
-    vec4 v1 = texture2D(u_lightbuffer, vec2(u, 0.0));
-    vec4 v2 = texture2D(u_lightbuffer, vec2(u, 0.5));
+    vec4 v1 = texture2D(u_lightbuffer, vec2(u, 0.3));
+    vec4 v2 = texture2D(u_lightbuffer, vec2(u, 0.6));
     light.position = v1.xyz;
 
     // LOOK: This extracts the 4th float (radius) of the (index)th light in the buffer
@@ -65,17 +65,17 @@ export default function(params) {
       return 0.0;
     }
   }
-
   
   void main() {
     // TODO: extract data from g buffers and do lighting
-    // Optimized
+
+    //Optimized
     //vec4 gb0 = texture2D(u_gbuffers[0], v_uv);
     //vec4 gb1 = texture2D(u_gbuffers[1], v_uv);
 
-    //vec3 albedo = vec3(gb0.w, gb1.xy);
     //vec3 v_position = gb0.rgb;
     //vec3 norm = vec3(gb1.zw, sqrt(1.0 - gb1.z * gb1.z - gb1.w * gb1.w));
+    //vec3 albedo = vec3(gb0.w, gb1.xy);
 
     vec4 gb0 = texture2D(u_gbuffers[0], v_uv);
     vec4 gb1 = texture2D(u_gbuffers[1], v_uv);
@@ -85,38 +85,38 @@ export default function(params) {
     vec3 norm = gb1.rgb;
     vec3 albedo = gb2.rgb;
 
-    vec4 position = u_viewMatrix * vec4(v_position.xyz, 1.0);
+
+    vec4 position = u_viewMatrix * vec4(v_position, 1.0);
     position.z *= -1.0;
 
-    int xIdx = int(gl_FragCoord.x * (float(u_xSlices) / u_screenW));
-    int yIdx = int(gl_FragCoord.y * (float(u_ySlices) / u_screenH));
-    int zIdx = int((position.z - u_camN) * (float(u_zSlices)/ (u_camF - u_camN)));
+    int xIdx = int(gl_FragCoord.x * (float(${params.u_xslices})/ float(u_screenW)));
+    int yIdx = int(gl_FragCoord.y * (float(${params.u_yslices})/ float(u_screenH)));
+    int zIdx = int((position.z - u_camN) * (float(${params.u_zslices})/ float(u_camF - u_camN)));
 
-    float index = float(xIdx + (yIdx * u_xSlices) + (zIdx * u_xSlices * u_ySlices));
+    int index = xIdx + yIdx * ${params.u_xslices} + zIdx * ${params.u_xslices} * ${params.u_yslices};
+    
+    float cIdx = float(index + 1) / float(${params.u_xslices} * ${params.u_yslices} * ${params.u_zslices} + 1);
 
-    float cIdx = (index + 1.0) / float((u_xSlices*u_ySlices*u_zSlices) + 1);
-    int numLights = int(texture2D(u_clusterbuffer, vec2(cIdx,0)).r);
+    int numLights = int(texture2D(u_clusterbuffer, vec2(cIdx, 0)).r);
 
     vec3 fragColor = vec3(0.0);
 
-    for (int i = 0; i <${params.numLights}; ++i){
-      if (i>= numLights){
+    for (int i = 0; i < ${params.numLights}; ++i) {
+      if(i >= numLights){
         break;
       }
 
-      int lightIdx = int(ExtractFloat(u_clusterbuffer, (u_xSlices*u_ySlices*u_zSlices), int(ceil(float(${params.maxLightsPerCluster} + 1) / 4.0)), int(index), i+1));
-      
+      int lightIdx = int(ExtractFloat(u_clusterbuffer, ${params.u_xslices} * ${params.u_yslices} * ${params.u_zslices}, int(ceil(float(${params.maxLightsPerCluster} + 1) / 4.0)), index, i + 1));
+
       Light light = UnpackLight(lightIdx);
+
       float lightDistance = distance(light.position, v_position);
       vec3 L = (light.position - v_position) / lightDistance;
 
       float lightIntensity = cubicGaussian(2.0 * lightDistance / light.radius);
-      float lambertTerm = max(dot(L, normal), 0.0);
+      float lambertTerm = max(dot(L, norm), 0.0);
 
       fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
-
-
-
     }
 
     const vec3 ambientLight = vec3(0.025);

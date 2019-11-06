@@ -19,7 +19,7 @@ export default class ForwardPlusRenderer extends BaseRenderer {
       numLights: NUM_LIGHTS,
       maxLightsPerCluster: MAX_LIGHTS_PER_CLUSTER,
     }), {
-      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer','u_xSlices','u_ySlices','u_zSlices','u_viewMatrix','u_screenH','u_screenW','u_camN','u_camF'],
+      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer','u_camP','u_xSlices','u_ySlices','u_zSlices','u_viewMatrix','u_screenH','u_screenW','u_camN','u_camF'],
       attribs: ['a_position', 'a_normal', 'a_uv'],
     });
 
@@ -82,6 +82,8 @@ export default class ForwardPlusRenderer extends BaseRenderer {
     gl.uniform1i(this._shaderProgram.u_xSlices, this._xSlices);
     gl.uniform1i(this._shaderProgram.u_ySlices, this._ySlices);
     gl.uniform1i(this._shaderProgram.u_zSlices, this._zSlices);
+    var test = vec3.fromValues(camera.position.x,camera.position.y,camera.position.z);
+    gl.uniform3fv(this._shaderProgram.u_camP,test);
     gl.uniform1f(this._shaderProgram.u_screenH, canvas.height);
     gl.uniform1f(this._shaderProgram.u_screenW, canvas.width);
     /////////////

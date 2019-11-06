@@ -1,5 +1,5 @@
 import { gl, WEBGL_draw_buffers, canvas } from '../init';
-import { mat4, vec4 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 import { loadShaderProgram, renderFullscreenQuad } from '../utils';
 import { NUM_LIGHTS } from '../scene';
 import toTextureVert from '../shaders/deferredToTexture.vert.glsl';
@@ -34,7 +34,7 @@ export default class ClusteredRenderer extends BaseRenderer {
       u_yslices: ySlices,
       u_zslices: zSlices,
     }), {
-      uniforms: ['u_gbuffers[0]', 'u_gbuffers[1]', 'u_gbuffers[2]', 'u_lightbuffer', 'u_clusterbuffer', 'u_viewMatrix', 'u_camF', 'u_camN','u_screenW', 'u_screenH'],
+      uniforms: ['u_gbuffers[0]', 'u_gbuffers[1]', 'u_gbuffers[2]', 'u_lightbuffer', 'u_clusterbuffer','u_viewMatrix','u_camF', 'u_camN','u_screenW', 'u_screenH'],
       attribs: ['a_uv'],
     });
 

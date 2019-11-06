@@ -11,7 +11,7 @@ export default function(params) {
   uniform int u_screenH;
   uniform float u_camF;
   uniform float u_camN;
-  
+    
   varying vec2 v_uv;
   uniform mat4 u_viewMatrix;
 
@@ -117,6 +117,7 @@ export default function(params) {
       float lambertTerm = max(dot(L, norm), 0.0);
 
       fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
+
     }
 
     const vec3 ambientLight = vec3(0.025);

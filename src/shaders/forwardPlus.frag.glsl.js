@@ -17,6 +17,7 @@ export default function(params) {
   uniform float u_screenW;
   uniform float u_camN;
   uniform float u_camF;
+  uniform vec3 u_camP;
 
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
@@ -121,8 +122,15 @@ export default function(params) {
 
       fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
 
-      ////// add blinng later
+      // Bling-Phong Implementation
 
+      vec3 lightCam = normalize(light.position - u_camP);
+      vec3 lightP = normalize(light.position - v_position);
+      
+      float spec = pow(max(dot(normal, normalize(lightCam + lightP)), 0.0), 2.0);
+      vec3 specColor = 0.01 * spec * light.color;
+
+      fragColor += specColor;
 
     }
 

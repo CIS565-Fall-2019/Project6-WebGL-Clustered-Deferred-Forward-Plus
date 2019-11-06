@@ -13,6 +13,7 @@ WebGL Clustered and Forward+ Shading
 - [Introduction](https://github.com/chhavisharma/Project6-WebGL-Clustered-Deferred-Forward-Plus#introduciton)
 - [Algorithm and Implementation](https://github.com/chhavisharma/Project6-WebGL-Clustered-Deferred-Forward-Plus#algorithm-and-implementation)
 - [Analysis](https://github.com/chhavisharma/Project6-WebGL-Clustered-Deferred-Forward-Plus#analysis )
+- [Results]()
 - [References](https://github.com/chhavisharma/Project6-WebGL-Clustered-Deferred-Forward-Plus#references )
 
 
@@ -56,6 +57,14 @@ Clustered also more memory intensive as comapred to forward plus.
 We also compute the number of lights v/s rendering time (miliseconds).
 We make similiar observstions here. Clustering and Forward plus are considerably faster than forward. It is difficult to comapre Clustering and Forward plus.
 ![](img/plot2.png)
+
+### Results
+<p align="center">
+  <img src="img/move.gif">
+</p>
+<p align="center">
+  <img src="img/cl.png">
+</p>
 
 ### References
 * [Three.js](https://github.com/mrdoob/three.js) by [@mrdoob](https://github.com/mrdoob) and contributors

@@ -17,7 +17,6 @@ export default function(params) {
   uniform float u_screenW;
   uniform float u_camN;
   uniform float u_camF;
-  uniform int u_mLpC;
 
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
@@ -91,26 +90,27 @@ export default function(params) {
     vec3 normal = applyNormalMap(v_normal, normap);
 
     vec4 position = u_viewMatrix * vec4(v_position.xyz, 1.0);
+    position.z *= -1.0;
 
     int xIdx = int(gl_FragCoord.x * (float(u_xSlices) / u_screenW));
     int yIdx = int(gl_FragCoord.y * (float(u_ySlices) / u_screenH));
-    int zIdx = int((-1.0*position.z - u_camN) * (float(u_zSlices)/ (u_camF - u_camN)));
+    int zIdx = int((position.z - u_camN) * (float(u_zSlices)/ (u_camF - u_camN)));
 
     float index = float(xIdx + (yIdx * u_xSlices) + (zIdx * u_xSlices * u_ySlices));
 
-    cIdx = (index + 1.0) / float((u_xSlices*u_ySlices*u_zSlices) + 1);
+    float cIdx = (index + 1.0) / float((u_xSlices*u_ySlices*u_zSlices) + 1);
     ///////////
-    //int(ExtractFloat(u_clusterbuffer, ${params.clusterTextureWidth}, ${params.clusterTextureHeight}, cInd, 0));
+    
     int numLights = int(texture2D(u_clusterbuffer, vec2(cIdx,0)).r);
 
     vec3 fragColor = vec3(0.0);
 
     for (int i = 0; i <${params.numLights}; ++i){
       if (i>= numLights){
-        break
+        break;
       }
 
-      int lightIdx = int(ExtractFloat(u_clusterbuffer, (u_xSlices*u_ySlices*u_zSlices), int(ceil(float(u_mLpC + 1) / 4.0)), int(index), i+1));
+      int lightIdx = int(ExtractFloat(u_clusterbuffer, (u_xSlices*u_ySlices*u_zSlices), int(ceil(float(${params.maxLightsPerCluster} + 1) / 4.0)), int(index), i+1));
       
       Light light = UnpackLight(lightIdx);
       float lightDistance = distance(light.position, v_position);

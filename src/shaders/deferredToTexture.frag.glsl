@@ -22,8 +22,23 @@ void main() {
     vec3 col = vec3(texture2D(u_colmap, v_uv));
 
     // TODO: populate your g buffer
+    // We want to store the following
+    // - Position ( vec 3 )
+    // - Normal ( vec 3)
+    // - Color ( vec 3 ) 
+    // each gl_FragData is a vec4, so we need three of them.
     // gl_FragData[0] = ??
     // gl_FragData[1] = ??
     // gl_FragData[2] = ??
     // gl_FragData[3] = ??
+
+    gl_FragData[0] = vec4(v_position, 1.0);
+    gl_FragData[1] = vec4(col, 1.0);
+    gl_FragData[2] = vec4(norm, 1.0);
+
+    // Hmm-Emoji, you only need two of the three normals, so you can pack this a bit more cleanly
+    // A little ugly, but its more space efficient
+    // TODO: Not able to pull out the normal for some reason. My math is wrong, definitely.
+    // gl_FragData[0] = vec4(v_position, norm.x);
+    // gl_FragData[1] = vec4(col,        norm.y);
 }

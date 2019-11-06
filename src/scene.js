@@ -14,6 +14,10 @@ class Scene {
   constructor() {
     this.lights = [];
     this.models = [];
+    this.shine = 0;
+    this.power = 0;
+    this.toon = false;
+    this.specualr = false;
 
     for (let i = 0; i < NUM_LIGHTS; ++i) {
       this.lights.push({
@@ -30,6 +34,19 @@ class Scene {
         radius: LIGHT_RADIUS,
       });
     }
+  }
+
+  setShine(s) {
+    this.shine = s;
+  }
+  setPower(p) {
+    this.power = p;
+  }
+  setSpecular(spec) {
+    this.specular = spec;
+  }
+  setToon(toon) {
+    this.toon = toon;
   }
 
   loadGLTF(url) {

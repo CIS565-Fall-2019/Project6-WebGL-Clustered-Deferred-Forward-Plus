@@ -11,6 +11,11 @@ export default function(params) {
 
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
+  uniform vec2 u_dimensions;
+  uniform ivec3 u_numslices;
+  uniform mat4 u_viewMat;
+  uniform float u_near;
+  uniform float u_far;
 
   varying vec3 v_position;
   varying vec3 v_normal;
@@ -50,14 +55,15 @@ export default function(params) {
   Light UnpackLight(int index) {
     Light light;
     float u = float(index + 1) / float(${params.numLights + 1});
-    vec4 v1 = texture2D(u_lightbuffer, vec2(u, 0.3));
-    vec4 v2 = texture2D(u_lightbuffer, vec2(u, 0.6));
+    vec4 v1 = texture2D(u_lightbuffer, vec2(u, 0.3)); // 0.0
+    vec4 v2 = texture2D(u_lightbuffer, vec2(u, 0.6)); // 0.5
     light.position = v1.xyz;
 
     // LOOK: This extracts the 4th float (radius) of the (index)th light in the buffer
     // Note that this is just an example implementation to extract one float.
     // There are more efficient ways if you need adjacent values
-    light.radius = ExtractFloat(u_lightbuffer, ${params.numLights}, 2, index, 3);
+    // light.radius = ExtractFloat(u_lightbuffer, ${params.numLights}, 2, index, 3);
+    light.radius = v1.w;
 
     light.color = v2.rgb;
     return light;
@@ -81,8 +87,33 @@ export default function(params) {
 
     vec3 fragColor = vec3(0.0);
 
+    vec3 fragPos = vec3(gl_FragCoord.x / u_dimensions.x, 
+      gl_FragCoord.y / u_dimensions.y, 
+      gl_FragCoord.z * gl_FragCoord.w);
+
+    // Get 3D grid coordinates of cluster
+    vec4 viewPos = u_viewMat * vec4(v_position, 1.0);
+    int gridx = int(float(u_numslices.x) * fragPos.x);
+    int gridy = int(float(u_numslices.y) * fragPos.y);
+    int gridz = int((-viewPos.z - u_near) * float(u_numslices.z) / (u_far - u_near));
+
+    // Convert 3D grid coordinates into 1D index
+    int index = gridx + gridy * u_numslices.x + gridz * u_numslices.x * u_numslices.y;
+
+    int numclusters = u_numslices.x * u_numslices.y * u_numslices.z;
+    int textureHeight = int(ceil(float(${params.numLights} + 1) / 4.0));
+
+    // Get number of lights in cluster
+    float u = float(index + 1) /  float(numclusters + 1);
+    int clusterNumLights = int(texture2D(u_clusterbuffer, vec2(u, 0)).x);
+
     for (int i = 0; i < ${params.numLights}; ++i) {
-      Light light = UnpackLight(i);
+      if (i >= clusterNumLights) {
+        break;
+      }
+      int lightIndex = int(ExtractFloat(u_clusterbuffer, numclusters, textureHeight, index, i + 1));
+
+      Light light = UnpackLight(lightIndex);
       float lightDistance = distance(light.position, v_position);
       vec3 L = (light.position - v_position) / lightDistance;
 
@@ -95,7 +126,7 @@ export default function(params) {
     const vec3 ambientLight = vec3(0.025);
     fragColor += albedo * ambientLight;
 
-    gl_FragColor = vec4(fragColor, 1.0);
+    gl_FragColor = vec4(fragColor.xyz, 1.0);
   }
   `;
 }

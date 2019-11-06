@@ -100,14 +100,33 @@ Below are some of the debug views. The normal and albedo views basically came fo
 
 ### Profiling
 
-NOTE! I did profiling on my Dell Laptop with the following Specs:
+NOTE! I did profiling on my Dell Laptop with Integrated Graphics.
 
-TODO
+The obvious first step is to compare the number of lights and each shader type. I tried running this on my normal PC, but failed to ever see the FPS drop below 60 for either Forward+ or Clustered shading. I was hitting other memory limits before seeing the FPS drop. So, I switched to my Dell laptop with a beefy Integrated graphics card and the differences were.... obvious.
 
-### Conclusion
+![](img/lp.png)
 
-TODO
+| Number of lights | Forward | Forward+ | Clustered |
+|------------------|---------|----------|-----------|
+| 1                | 23      | 27       | 36        |
+| 10               | 23      | 27       | 36        |
+| 50               | 45      | 27       | 36        |
+| 100              | 82      | 27       | 36        |
+| 500              | 330     | 97       | 51        |
+| 1000             | 662     | 115      | 60        |
 
+I also wanted to see the performance impact of Blinn-Phong shading. As can be seen, there is a significant drop in performance by adding Blinn-Phong shading. This was more than I had expected, since the operations look pretty simple from afar. However, looking at the code itself, it seems reasonable. The shading requires several vector operations, and those can add up. Within the shader itself I wasn't able to see the contribution of each line.
+
+![](img/bpp.png)
+
+| Number of lights | Forward+ | Forward+ w/ BP | Clustered | Clustered w/BP |
+|------------------|----------|----------------|-----------|----------------|
+| 1                | 27       | 27             | 36        | 36             |
+| 10               | 27       | 27             | 36        | 36             |
+| 50               | 27       | 27             | 36        | 36             |
+| 100              | 27       | 48             | 36        | 36             |
+| 500              | 97       | 133            | 51        | 60             |
+| 1000             | 115      | 162            | 60        | 71             |
 
 ### Credits
 

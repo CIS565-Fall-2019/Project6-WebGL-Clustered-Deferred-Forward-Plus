@@ -1,28 +1,37 @@
 WebGL Clustered and Forward+ Shading
 ======================
 
-**University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 5**
+**University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 6**
 
-* (TODO) YOUR NAME HERE
-* Tested on: (TODO) **Google Chrome 222.2** on
-  Windows 22, i7-2222 @ 2.22GHz 22GB, GTX 222 222MB (Moore 2222 Lab)
+* Dewang Sultania
+  * [LinkedIn](https://www.linkedin.com/in/dewang-sultania/)
 
-### Live Online
+* Tested on: **Google Chrome 2019.11.2.6233255** on
+  Windows 10, Intel Xeon E-2176M @ 2.70GHz 16GB, Quadro P2000 4GB (Personal Computer)
+  
+### Live Demo
 
-[![](img/thumb.png)](http://TODO.github.io/Project5B-WebGL-Deferred-Shading)
+[Link](https://Iron-Stark.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus/)
 
 ### Demo Video/GIF
 
-[![](img/video.png)](TODO)
+![](https://drive.google.com/uc?export=view&id=1GDefK5J8xOBN_drRp3XQk6X0SvXTG5d7)
 
-### (TODO: Your README)
+#### Forward
 
-*DO NOT* leave the README to the last minute! It is a crucial part of the
-project, and we will not be able to grade you without a good README.
+![](https://drive.google.com/uc?export=view&id=1hgzrJAexwYWJFqGiG2ZkpQauutt4PMsT)
 
-This assignment has a considerable amount of performance analysis compared
-to implementation work. Complete the implementation early to leave time!
+#### Forward+
 
+![](https://drive.google.com/uc?export=view&id=14tIgU2n4WopmrjQ25FHygyHMH03mzxYJ)
+
+#### Clustered
+
+![](https://drive.google.com/uc?export=view&id=1Ahk5_bBYn9Urequv_mnGbEuvyqBglucz)
+
+### Performance Analysis
+
+![](https://drive.google.com/uc?export=view&id=19286xcxho2h2SUvzu8nudsOU2JyjoTIv)
 
 ### Credits
 

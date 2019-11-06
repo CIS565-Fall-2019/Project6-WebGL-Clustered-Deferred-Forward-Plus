@@ -1,30 +1,69 @@
 WebGL Clustered and Forward+ Shading
 ======================
 
-**University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 5**
+**University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 6**
 
-* (TODO) YOUR NAME HERE
-* Tested on: (TODO) **Google Chrome 222.2** on
-  Windows 22, i7-2222 @ 2.22GHz 22GB, GTX 222 222MB (Moore 2222 Lab)
+Peyman Norouzi
+* [LinkedIn](https://www.linkedin.com/in/peymannorouzi)
+* Tested on: **Chrome Version 78.0.3904.87** Windows 10, i7-6500 @ 2.40GHz 16GB, Intel HD Graphics 520 (Personal Computer)
+
+<p align="center">
+  <img src="imgs/top.gif">
+</p>
 
 ### Live Online
 
 [![](img/thumb.png)](http://TODO.github.io/Project5B-WebGL-Deferred-Shading)
 
-### Demo Video/GIF
+## Introduction:
 
-[![](img/video.png)](TODO)
+### What is WebGl?:
 
-### (TODO: Your README)
+## Implementation:
 
-*DO NOT* leave the README to the last minute! It is a crucial part of the
-project, and we will not be able to grade you without a good README.
+<p align="center">
+  <img src="imgs/rend.png">
+</p>
 
-This assignment has a considerable amount of performance analysis compared
-to implementation work. Complete the implementation early to leave time!
+### Forward:
+
+### Forward +:
+
+### Clustered:
+
+<p align="center">
+  <img src="imgs/bot.gif">
+</p>
+
+### Blinn-Phong Shading:
+
+<p align="center">
+  <img src="imgs/BPR.jpg" width="340">
+</p>
+
+| Without Blinn-Phong Shading | With Blinn-Phong Shading |
+| ------------- | ----------- |
+| ![](imgs/Blin_off.gif)  | ![](imgs/Blin_on.gif) |
 
 
-### Credits
+## Perfomance Implementation and Analysis:
+
+<p align="center">
+  <img src="imgs/plot3.png">
+</p>
+
+### Optimization:
+
+<p align="center">
+  <img src="imgs/plotO.png">
+</p>
+
+### Blooper:
+<p align="center">
+  <img src="imgs/blooper1.PNG"width="340">
+</p>
+
+## Credits
 
 * [Three.js](https://github.com/mrdoob/three.js) by [@mrdoob](https://github.com/mrdoob) and contributors
 * [stats.js](https://github.com/mrdoob/stats.js) by [@mrdoob](https://github.com/mrdoob) and contributors

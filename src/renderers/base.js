@@ -143,8 +143,8 @@ export default class BaseRenderer {
       vec4.transformMat4(localLights[lightIdx], localLights[lightIdx], viewMatrix);
       localLights[lightIdx][3] = scene.lights[lightIdx].radius;
 
-      let width = camera.getFilmWidth();
-      let height = camera.getFilmHeight();
+      let width = camera.getFilmWidth() * 2;
+      let height = camera.getFilmHeight() * 2;
       let depth = camera.far - camera.near;
 
       // Get minimums for interaction along all dimensions
@@ -157,6 +157,13 @@ export default class BaseRenderer {
       ymax = localLights[lightIdx][1] + localLights[lightIdx][3];
       zmin = localLights[lightIdx][2] + localLights[lightIdx][3]; // z negative
       zmax = localLights[lightIdx][2] - localLights[lightIdx][3]; // z negative
+
+      // Do some early culling
+      if (zmax > -0.1 ) { continue; }
+      if (zmin < -camera.far) { continue; }
+
+      // Any light beyond here has at least some z component, so safely clamp zmin
+      zmin = -clamp(-zmin, 0.10001, camera.far);
 
       // Convert each value into a cluster index.
       // X and y are linear on the screen

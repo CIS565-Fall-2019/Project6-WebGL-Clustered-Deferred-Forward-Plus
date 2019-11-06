@@ -85,8 +85,8 @@ export default class ForwardPlusRenderer extends BaseRenderer {
     gl.uniform1f(this._shaderProgram.u_camera_far,    camera.far);
     gl.uniform1f(this._shaderProgram.u_camera_fov,    camera.fov);
     gl.uniform1f(this._shaderProgram.u_camera_aspect, camera.aspect);
-    gl.uniform1f(this._shaderProgram.u_camera_width,  camera.getFilmWidth());
-    gl.uniform1f(this._shaderProgram.u_camera_height, camera.getFilmHeight());
+    gl.uniform1f(this._shaderProgram.u_camera_width,  camera.getFilmWidth() * 2);
+    gl.uniform1f(this._shaderProgram.u_camera_height, camera.getFilmHeight() * 2);
     gl.uniform1f(this._shaderProgram.u_x_slices,      this._xSlices);
     gl.uniform1f(this._shaderProgram.u_y_slices,      this._ySlices);
     gl.uniform1f(this._shaderProgram.u_z_slices,      this._zSlices);

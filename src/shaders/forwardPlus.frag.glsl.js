@@ -177,8 +177,19 @@ export default function(params) {
 
       float lightIntensity = cubicGaussian(2.0 * lightDistance / light.radius);
       float lambertTerm = max(dot(L, normal), 0.0);
-
+      
       fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
+
+      // Blinn-Phong
+      // https://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_reflection_model
+      if(lambertTerm > 0.0) {
+        vec4 view_pos = u_view_matrix * vec4(v_position, 1.0);
+        vec3 specularColor = vec3(0.5, 0.5, 0.5);
+        vec3 H = normalize(normalize(L) + normalize(-view_pos.xyz));
+        float specularAngle = max(dot(normal, H), 0.0);
+        float specularIntensity = pow(specularAngle, 0.8); // Hardcoded shiniess.
+        fragColor += specularIntensity * light.color * vec3(lightIntensity);
+      }
     }
 
     const vec3 ambientLight = vec3(0.025);

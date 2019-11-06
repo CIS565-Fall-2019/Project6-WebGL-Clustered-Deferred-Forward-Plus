@@ -1,6 +1,7 @@
 #version 100
 precision highp float;
 
+uniform mat4 u_modelViewMatrix;
 uniform mat4 u_viewProjectionMatrix;
 
 attribute vec3 a_position;

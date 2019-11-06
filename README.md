@@ -13,7 +13,7 @@ WebGL Clustered and Forward+ Shading
 - [Introduction](https://github.com/chhavisharma/Project6-WebGL-Clustered-Deferred-Forward-Plus#introduciton)
 - [Algorithm and Implementation](https://github.com/chhavisharma/Project6-WebGL-Clustered-Deferred-Forward-Plus#algorithm-and-implementation)
 - [Analysis](https://github.com/chhavisharma/Project6-WebGL-Clustered-Deferred-Forward-Plus#analysis )
-- [Results]()
+- [Results](https://github.com/chhavisharma/Project6-WebGL-Clustered-Deferred-Forward-Plus#results)
 - [References](https://github.com/chhavisharma/Project6-WebGL-Clustered-Deferred-Forward-Plus#references )
 
 
@@ -29,8 +29,8 @@ Forward rendereing is the navie/default rendering where, after each object is ra
 #### Forward+
 In case of forward+ rendering, the rendering space is divided 2D tiles and light culling is used for efficient color computaitons. It usually has three passes where in the first pass, depth at each visible point is computed, then in the second pass (light culling) each tile is assigned light sources that it is affected by, and finally the shading is done using light sources assosiated with the current tile only. The shaders still have nested for loops but work with limited lights per element. 
 
-#### Defered
-Deffered shading is different from forward plus shading, in that, it defers the actual shading task to a second pass. In a single first pass, geomentry of each point is computed and stored in a buffer, which is utilised in the second pass where the shader computes the colors. The light culling procedure can be added to make the light search more efficient. But defered shading has its limitations where it cannot render translucency efficiently due to gbuffer limitations whereas forward+ can handle translucency.  
+#### Deferred
+Deferred shading is different from forward plus shading, in that, it defers the actual shading task to a second pass. In a single first pass, geomentry of each point is computed and stored in a buffer, which is utilised in the second pass where the shader computes the colors. The light culling procedure can be added to make the light search more efficient. But defered shading has its limitations where it cannot render translucency efficiently due to gbuffer limitations whereas forward+ can handle translucency.  
 
 The following image shows how the 3D visible space is divided into grids to asign lights to each grid for light culling. 
 <p align="center">
@@ -54,9 +54,6 @@ Clustered also more memory intensive as comapred to forward plus.
 <p align="center">
   <img src="img/plot.png">
 </p>
-We also compute the number of lights v/s rendering time (miliseconds).
-We make similiar observstions here. Clustering and Forward plus are considerably faster than forward. It is difficult to comapre Clustering and Forward plus.
-![](img/plot2.png)
 
 ### Results
 <p align="center">

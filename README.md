@@ -6,21 +6,16 @@ WebGL Clustered and Forward+ Shading
 * John Marcao
   * [LinkedIn](https://www.linkedin.com/in/jmarcao/)
   * [Personal Website](https://jmarcao.github.io)
-* Tested on: Windows 10, i5-4690K @ 3.50GHz, 8GB DDR3, RTX 2080 TI 3071MB (Personal)
+* Developed on: Windows 10, i5-4690K @ 3.50GHz, 8GB DDR3, RTX 2080 TI (Mem: 3071MB) (Personal)
+* Profiled on: Windows 10, i7-6500U @ 2.50GHz, 8GB DDR3, Intel HD Graphics 520 (Mem: Yes.) (Personal)
 
-![](img/recording.gif)
+![](img/inaction.gif)
 
 ### Introduction
 
 The object of this project was to implement a Forward+ and Clustered renderer using WebGL along with Three.JS. Going into this project, I had not experience with WebGL and javascript and only a simple, basic knowledge of rendering. I found that the hardest part of this project was learning to change all my thought processes from CPU-based coding to Pipeline and Rendering based. The hardest part of that was getting used to the terminology used, especially since compute shaders still use a lot of graphics terminology.
 
-Unfortunately I was unable to finish the project in time. Between other responsibilities and the days spent attempting to debug my shaders, I was able to make some progress. I was able to begin indexing lights based on their intersecting clusters and rendering them through a shader, but I ran into two brick walls.
-
-1) I have an issue somewhere in my cluster indexing between the shader and CPU side code. I suspect this due to blinking blocks in my current software. I believe the lights are not getting indexed correctly between frames.
-
-2) I am not confident my clustering is set up properly. I got a lot of help through classmates, papers, and presentations, but there is still a bug lying somewhere in their construction.
-
-Since I cannot accomplish everything by the deadline, I've chosen to discuss my design decisions, why some of them proved to be insufficient, as well as some basic debugging and performance metrics.
+I finally found that simpler is ALWAYS better. I started off with some ambitious ideas but found that I didn't know the tools well enough. I fell back to simpler designs, shaving off a few known performance benefits. All things considered, I learned a lot.
 
 ### Design
 
@@ -61,11 +56,36 @@ foreach z
 end
 ```
 
-Note that once an intersection is found, it does not matter where the exact position is (something the previous algorithm needed to know). This algorithm seems to work well, and I see most, if not all the lights appear in my rendered output. Due to other issues I cannot confirm this.
+Note that once an intersection is found, it does not matter where the exact position is (something the previous algorithm needed to know). This algorithm seems to work well, and I see most, if not all the lights appear in my rendered output. However, I found that this is SLOW. Far too slow to provide any benefit. Lastly, I approached my final design. Much simpler, much more blunt, but it works.
+
+```
+find minimums for xyz
+foreach z in zmin, zmax
+    foreach y in ymin, ymax
+        foreach x in xmin, xmax
+            populate clusters
+        end
+    end
+end
+```
+
+This design avoids ugly intersection tests, building new geometries, or anything else. There is some more culling to be done, but this approach worked.
 
 I next focused on the fragment shader. This is where the data stored in the CPU side code would be read and rendered. Most of the logic was already implemented, I just needed to add indexing to the cluster texture to cull the list of lights that needed to be checked. The logic is not quite right, as the image is still choppy. My biggest hurdle here was validating that the cluster indices were being calculated correctly. Being in a shader, it was hard to debug anything, and mt attempt at exporting data from the shader ended pretty quickly. I was able to setup some debug views however that absolutely helped.
 
-My original indexing had issues on the edges of the screen. Instead of having clusters from edge to edge, it was only going about halfway before being merged into one supercluster. This was due to the translation between view space, world space, and screen space. I was mixing up values in different coordinate systems, which caused all sorts of odd behavior.
+My original indexing had issues on the edges of the screen. Instead of having clusters from edge to edge, it was only going about halfway before being merged into one supercluster. This was due to the translation between view space, world space, and screen space. I was mixing up values in different coordinate systems, which caused all sorts of odd behavior. Once I simplified my intersection algorithm, it created a far simpler cluster index calculation. I took advantage of that.
+
+My last major issue was light indexing. I was lost on how to properly access textureBuffers in WebGL. It finally clicked when I thought of the buffers as having some width and some depth, but width is measured in objects and depth is measured in floats. Once I grasped that, the indexing became much easier.
+
+### Blinn-Phong Shading
+
+I implemented a very simple Blinn-Phong Shader. The performance impact of this shader is minimal, since it only performs a bit of extra computation in each fragment shader. Since this is spread out by the GPU, this helps mask the slowdown.
+
+| Without BP | With BP |
+|-----------|--------|
+| ![](img/without_bp.gif) | ![](img/with_bp.gif) |
+
+### Debug Views
 
 Below are some of the debug views. The normal and albedo views basically came for free.
 
@@ -80,7 +100,7 @@ Below are some of the debug views. The normal and albedo views basically came fo
 
 ### Profiling
 
-On top of not finishing the Forward+ renderer, I was unable to get it performing faster than a regular Forward renderer. I was able to gather some profiling data however.
+NOTE! I did profiling on my Dell Laptop with the following Specs:
 
 TODO
 

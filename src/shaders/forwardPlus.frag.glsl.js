@@ -187,7 +187,7 @@ export default function(params) {
         vec3 specularColor = vec3(0.5, 0.5, 0.5);
         vec3 H = normalize(normalize(L) + normalize(-view_pos.xyz));
         float specularAngle = max(dot(normal, H), 0.0);
-        float specularIntensity = pow(specularAngle, 0.8); // Hardcoded shiniess.
+        float specularIntensity = pow(specularAngle, 0.7); // Hardcoded shiniess.
         fragColor += specularIntensity * light.color * vec3(lightIntensity);
       }
     }

@@ -37,16 +37,16 @@ Deffered shading is different from forward plus shading, in that, it defers the 
 
 The following image shows how the 3D visible space is divided into grids to asign lights to each grid for light culling. 
 <p align="center">
-  <img src="img/rend.png" width=700>
+  <img src="img/rend.png" width=400>
 </p>
 
 #### Effects
 We also implement the [Blinn–Phong](https://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_reflection_model) reflection model that combines diffuse and specular lighting.  It can be seen as an approximation to the Phong model where a halfway vector between the viewer and light-source vectors are computed for faster calculations instead of R ⋅ V {\displaystyle R\cdot V} R\cdot V. 
 <p align="center">
-  <img src="img/phong.png" width=700>
+  <img src="img/phong.png" width=400>
 </p>
 <p align="center">
-  <img src="img/h.png" width=700>
+  <img src="img/h.png" width=100>
 </p>
 This dot product represents the cosine of an angle that is half of the angle represented by Phong's dot product if V, L, N and R all lie in the same plane. This relation between the angles remains approximately true when the vectors don't lie in the same plane, especially when the angles are small. 
 

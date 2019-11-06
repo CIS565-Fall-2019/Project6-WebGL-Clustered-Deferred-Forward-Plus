@@ -50,11 +50,11 @@ This dot product represents the cosine of an angle that is half of the angle rep
 We comapre the three rendering pipelines by varying the number of lights rendered and computign the FPS. We can notice that forward is the slowest. 
 Clustered/defered is faster than forward+ in most cases in the current setting but it may not always be true. 
 Clustered also more memory intensive as comapred to forward plus. 
-![](img/plot.gif)
+![](img/plot.png)
 
 We also compute the number of lights v/s rendering time (miliseconds).
 We make similiar observstions here. Clustering and Forward plus are considerably faster than forward. It is difficult to comapre Clustering and Forward plus.
-![](img/plot2.gif)
+![](img/plot2.png)
 
 ### References
 * [Three.js](https://github.com/mrdoob/three.js) by [@mrdoob](https://github.com/mrdoob) and contributors

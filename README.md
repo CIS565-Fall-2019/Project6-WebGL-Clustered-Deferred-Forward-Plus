@@ -3,29 +3,28 @@ WebGL Clustered and Forward+ Shading
 
 **University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 5**
 
-* (TODO) YOUR NAME HERE
-* Tested on: (TODO) **Google Chrome 222.2** on
-  Windows 22, i7-2222 @ 2.22GHz 22GB, GTX 222 222MB (Moore 2222 Lab)
+* Chhavi Sharma
+* Tested on: (TODO) **Firefox 70.0.1** on
+  OsX 10.14.6 i5 @ 1.6GHz 8GB
 
 ### Live Online
-
-[![](img/thumb.png)](http://TODO.github.io/Project5B-WebGL-Deferred-Shading)
+[![](img/thumb.png)](http://chhavisharma.github.io/Project5B-WebGL-Deferred-Shading)
 
 ### Demo Video/GIF
-
-[![](img/video.png)](TODO)
-
-### (TODO: Your README)
-
-*DO NOT* leave the README to the last minute! It is a crucial part of the
-project, and we will not be able to grade you without a good README.
-
-This assignment has a considerable amount of performance analysis compared
-to implementation work. Complete the implementation early to leave time!
+[![](img/Webgl.gif)]
 
 
-### Credits
+### Index
+- [Introduction]()
+- [Algorithm]()
+- [Implementation Details]( )
+- [Analysis]( )
+- [Results](  )
+- [References]( )
 
+
+
+### References
 * [Three.js](https://github.com/mrdoob/three.js) by [@mrdoob](https://github.com/mrdoob) and contributors
 * [stats.js](https://github.com/mrdoob/stats.js) by [@mrdoob](https://github.com/mrdoob) and contributors
 * [webgl-debug](https://github.com/KhronosGroup/WebGLDeveloperTools) by Khronos Group Inc.

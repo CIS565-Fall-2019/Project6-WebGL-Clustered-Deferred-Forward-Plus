@@ -4,8 +4,7 @@ WebGL Clustered and Forward+ Shading
 **University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 5**
 
 * Chhavi Sharma
-* Tested on: (TODO) **Firefox 70.0.1** on
-  OsX 10.14.6 i5 @ 1.6GHz 8GB
+* Tested on:**Firefox 70.0.1** on OsX 10.14.6 i5 @ 1.6GHz 8GB
 
 ### Live Online
 ![](img/thumb.png)](http://chhavisharma.github.io/Project5B-WebGL-Deferred-Shading)
@@ -37,8 +36,9 @@ In case of forward+ rendering, the rendering space is divided 2D tiles and light
 Deffered shading is different from forward plus shading, in that, it defers the actual shading task to a second pass. In a single first pass, geomentry of each point is computed and stored in a buffer, which is utilised in the second pass where the shader computes the colors. The light culling procedure can be added to make the light search more efficient. But defered shading has its limitations where it cannot render translucency efficiently due to gbuffer limitations whereas forward+ can handle translucency.  
 
 The following image shows how the 3D visible space is divided into grids to asign lights to each grid for light culling. 
-![](img/rend.gif)
-
+<p align="center">
+  <img src="img/rend.png" width=700>
+</p>
 
 #### Effects
 We also implement the [Blinn–Phong](https://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_reflection_model) reflection model that combines diffuse and specular lighting.  It can be seen as an approximation to the Phong model where a halfway vector between the viewer and light-source vectors are computed for faster calculations instead of R ⋅ V {\displaystyle R\cdot V} R\cdot V. 

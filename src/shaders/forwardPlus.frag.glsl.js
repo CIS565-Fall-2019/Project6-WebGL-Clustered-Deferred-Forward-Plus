@@ -11,6 +11,17 @@ export default function(params) {
 
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
+  uniform float u_nearWidth;
+  uniform float u_nearHeight;
+  uniform float u_farWidth;
+  uniform float u_farHeight;
+  uniform float u_far;
+  uniform float u_near;
+  uniform int u_xSlices;
+  uniform int u_ySlices;
+  uniform int u_zSlices;
+  uniform mat4 u_viewMatrix;
+  uniform vec3 u_cameraPos;
 
   varying vec3 v_position;
   varying vec3 v_normal;
@@ -81,15 +92,51 @@ export default function(params) {
 
     vec3 fragColor = vec3(0.0);
 
-    for (int i = 0; i < ${params.numLights}; ++i) {
-      Light light = UnpackLight(i);
+    vec4 pos = u_viewMatrix * vec4(v_position, 1.0);
+
+    float lambda = (abs(pos.z) - u_near)/(u_far*1.0 - u_near*1.0);
+    float u_width = u_nearWidth + (u_farWidth-u_nearWidth)*lambda;
+    float u_height = u_nearHeight + (u_farHeight-u_nearHeight)*lambda;
+
+    float xstep = u_width/float(u_xSlices);
+    float ystep = u_height/float(u_ySlices);
+    float zstep = (u_far - u_near)/float(u_zSlices);
+
+    int x = int(floor((pos.x + 0.5*u_width)/xstep));
+    int y = int(floor((pos.y + 0.5*u_height)/ystep));
+    int z = int(floor((abs(pos.z) - u_near)/zstep));
+
+    int clusterId = x + y * u_xSlices + z * u_xSlices * u_ySlices;
+  
+    int numLights = int(ExtractFloat(u_clusterbuffer, 
+      ${params.textureWidth}, ${params.textureHeight}, clusterId, 0));
+
+    for (int i = 1; i < ${params.textureHeight}*4-1; ++i) {
+      
+      if(i > numLights) {
+        break;
+      }
+
+      int lightId = int(ExtractFloat(u_clusterbuffer, 
+        ${params.textureWidth}, ${params.textureHeight}, clusterId, i));
+
+      Light light = UnpackLight(lightId);
       float lightDistance = distance(light.position, v_position);
       vec3 L = (light.position - v_position) / lightDistance;
 
       float lightIntensity = cubicGaussian(2.0 * lightDistance / light.radius);
       float lambertTerm = max(dot(L, normal), 0.0);
 
+      // Bling-Phong
+      vec3 lightCameraDir = normalize(light.position - u_cameraPos);
+      vec3 lightToPoint = normalize(light.position - v_position);
+      vec3 halfDir = normalize(lightCameraDir + lightToPoint);
+
+      float spec = pow(max(dot(normal, halfDir), 0.0), 2.0);
+      vec3 specColor = 0.01 * spec * light.color;
+
       fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
+      fragColor += specColor;
     }
 
     const vec3 ambientLight = vec3(0.025);

@@ -9,6 +9,24 @@ export default function(params) {
   uniform sampler2D u_normap;
   uniform sampler2D u_lightbuffer;
 
+  // uniform variables for camera
+
+  uniform mat4 u_viewMatrix;
+
+  uniform float u_farClip;
+  uniform float u_nearClip;
+
+  uniform float u_nearWidth;
+  uniform float u_nearHeight;
+
+  uniform float u_farWidth;
+  uniform float u_farHeight;
+
+  uniform float u_xSlices;
+  uniform float u_ySlices;
+  uniform float u_zSlices;
+
+
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
 
@@ -81,14 +99,41 @@ export default function(params) {
 
     vec3 fragColor = vec3(0.0);
 
-    for (int i = 0; i < ${params.numLights}; ++i) {
-      Light light = UnpackLight(i);
+    // Project fragment v from world coordinates to camera view coorndinates
+    vec4 viewPos =  u_viewMatrix * vec4(v_position, 1.0);
+
+    // Compute the x-y plane's (where v lies) width and height based on the depth
+    float depthFactor = ((abs(viewPos.z) - u_nearClip)/((1.0 * u_farClip) - (1.0 * u_nearClip) ));
+    float xyplaneWidth = u_nearWidth + ((u_farWidth - u_nearWidth) * depthFactor);
+    float xyplaneHeight = u_nearHeight + ((u_farHeight - u_nearHeight) * depthFactor);
+    
+    // Find cluster indices x,y,z where the fragment v lies
+    // Shift the x and y indices by half H and half W to make the indices positive 
+    int z = int(depthFactor / u_zSlices);
+    int x = int((viewPos.x + 0.5 * xyplaneWidth) / (xyplaneWidth / u_xSlices));
+    int y = int((viewPos.y + 0.5 * xyplaneHeight) / (xyplaneHeight / u_ySlices));
+    
+    // Read in the lights in that cluster from the u_clusterbuffer populated in base.js
+    // get linearised cluster id (to access u_clusterbuffer) based on point v_position
+    int idx = x +  y * int(u_xSlices)  +  z * int(u_xSlices) * int(u_ySlices); 
+    int numLightsCluster = int(ExtractFloat(u_clusterbuffer, ${params.clusterTextureWidth}, ${params.clusterTextureHeight}, idx, 0));
+
+    // Do shading for just lights in this cluster
+    for(int lidx = 1; lidx < ${params.clusterTextureHeight} * 4 - 1; ++lidx){
+      if(lidx > numLightsCluster) {
+        break;
+      }
+      int lightId = int(ExtractFloat(u_clusterbuffer, ${params.clusterTextureWidth}, ${params.clusterTextureHeight}, idx, lidx));
+      Light light = UnpackLight(lightId);
+
+    // }
+    // for (int i = 0; i < ${params.numLights}; ++i) {
+    //   Light light = UnpackLight(i);
+
       float lightDistance = distance(light.position, v_position);
       vec3 L = (light.position - v_position) / lightDistance;
-
       float lightIntensity = cubicGaussian(2.0 * lightDistance / light.radius);
       float lambertTerm = max(dot(L, normal), 0.0);
-
       fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
     }
 

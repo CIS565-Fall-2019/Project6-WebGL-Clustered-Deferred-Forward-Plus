@@ -6,12 +6,8 @@ WebGL Clustered and Forward+ Shading
 * Chhavi Sharma
 * Tested on:**Firefox 70.0.1** on OsX 10.14.6 i5 @ 1.6GHz 8GB
 
-### Live Online
-![](img/thumb.png)](http://chhavisharma.github.io/Project5B-WebGL-Deferred-Shading)
-
 ### Demo Video/GIF
 ![](img/Webgl.gif)
-
 
 ### Index
 - [Introduction](https://github.com/chhavisharma/Project6-WebGL-Clustered-Deferred-Forward-Plus#introduciton)

@@ -18,7 +18,7 @@ WebGL Clustered and Forward+ Shading
 
 
 ### Introduciton 
-We implement a webGL based renderer using three graphics pipleines: Forward, Forward+ and Defered Rendering and show comparative analysis.
+We implement a webGL based renderer using three graphics pipleines: Forward, Forward+ and Deferred Rendering, and, show comparative analysis.
 
 ### Algorithm and Implementation 
 The graphics rendering pipelines differ in the way each process light sources and objects in the scene. They are explained as follows:

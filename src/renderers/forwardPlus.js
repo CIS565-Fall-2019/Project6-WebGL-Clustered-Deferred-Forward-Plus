@@ -6,18 +6,24 @@ import vsSource from '../shaders/forwardPlus.vert.glsl';
 import fsSource from '../shaders/forwardPlus.frag.glsl.js';
 import TextureBuffer from './textureBuffer';
 import BaseRenderer from './base';
+import { MAX_LIGHTS_PER_CLUSTER } from './base.js'
 
 export default class ForwardPlusRenderer extends BaseRenderer {
-  constructor(xSlices, ySlices, zSlices) {
-    super(xSlices, ySlices, zSlices);
+    constructor(xSlices, ySlices, zSlices) {
+        super(xSlices, ySlices, zSlices);
 
     // Create a texture to store light data
     this._lightTexture = new TextureBuffer(NUM_LIGHTS, 8);
     
     this._shaderProgram = loadShaderProgram(vsSource, fsSource({
-      numLights: NUM_LIGHTS,
+        numLights: NUM_LIGHTS,
+        maxLightsPerCluster: MAX_LIGHTS_PER_CLUSTER,
+        slicesX: xSlices,
+        slicesY: ySlices,
+        slicesZ: zSlices,
     }), {
-      uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer'],
+        uniforms: ['u_viewProjectionMatrix', 'u_colmap', 'u_normap', 'u_lightbuffer', 'u_clusterbuffer',
+                    'u_viewMatrix', 'u_near', 'u_far', 'u_screenW', 'u_screenH'],
       attribs: ['a_position', 'a_normal', 'a_uv'],
     });
 
@@ -75,7 +81,12 @@ export default class ForwardPlusRenderer extends BaseRenderer {
     gl.bindTexture(gl.TEXTURE_2D, this._clusterTexture.glTexture);
     gl.uniform1i(this._shaderProgram.u_clusterbuffer, 3);
 
-    // TODO: Bind any other shader inputs
+      // TODO: Bind any other shader inputs
+    gl.uniformMatrix4fv(this._shaderProgram.u_viewMatrix, false, this._viewMatrix);
+    gl.uniform1f(this._shaderProgram.u_near, camera.near); 
+    gl.uniform1f(this._shaderProgram.u_far, camera.far);
+    gl.uniform1f(this._shaderProgram.u_screenW, canvas.width);
+    gl.uniform1f(this._shaderProgram.u_screenH, canvas.height);
 
     // Draw the scene. This function takes the shader program so that the model's textures can be bound to the right inputs
     scene.draw(this._shaderProgram);

@@ -12,6 +12,17 @@ export default function(params) {
   // TODO: Read this buffer to determine the lights influencing a cluster
   uniform sampler2D u_clusterbuffer;
 
+  uniform mat4 u_viewMatrix;
+  uniform float u_screenW;
+  uniform float u_screenH;
+  uniform float u_near;
+  uniform float u_far;
+  int u_slicesX = ${params.slicesX};
+  int u_slicesY = ${params.slicesY};
+  int u_slicesZ = ${params.slicesZ};
+  float height = ceil(float(${params.maxLightsPerCluster} + 1) / 4.0);
+  int num_clusters = u_slicesX * u_slicesY * u_slicesZ;
+
   varying vec3 v_position;
   varying vec3 v_normal;
   varying vec2 v_uv;
@@ -79,17 +90,35 @@ export default function(params) {
     vec3 normap = texture2D(u_normap, v_uv).xyz;
     vec3 normal = applyNormalMap(v_normal, normap);
 
+    vec4 cameraPos = u_viewMatrix * vec4(v_position, 1.0);
+
+    int ix = int(gl_FragCoord.x * float(u_slicesX) / u_screenW);
+    int iy = int(gl_FragCoord.y * float(u_slicesY) / u_screenH);
+    int iz = int((-cameraPos.z - u_near) * float(u_slicesZ) / (u_far - u_near));
+
+    int idx = ix + iy * u_slicesX + iz * u_slicesX * u_slicesY;
+    int num_lights = int(ExtractFloat( u_clusterbuffer, num_clusters, ${params.maxLightsPerCluster}, idx, 0));
+
     vec3 fragColor = vec3(0.0);
 
     for (int i = 0; i < ${params.numLights}; ++i) {
-      Light light = UnpackLight(i);
+       if(i >= num_lights) { break; } 
+
+      int iL = int(ExtractFloat(u_clusterbuffer, num_clusters, int(height), idx, i+1));
+      Light light = UnpackLight(iL);
+
       float lightDistance = distance(light.position, v_position);
       vec3 L = (light.position - v_position) / lightDistance;
 
       float lightIntensity = cubicGaussian(2.0 * lightDistance / light.radius);
       float lambertTerm = max(dot(L, normal), 0.0);
 
-      fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity);
+      vec3 viewDir = normalize(-v_position);
+      vec3 halfDir = normalize(L + viewDir);
+      float specAngle = max(dot(halfDir, normal), 0.0);
+      float specular = pow(specAngle, 4200.0);
+
+      fragColor += albedo * lambertTerm * light.color * vec3(lightIntensity) + 0.1*specular*light.color;
     }
 
     const vec3 ambientLight = vec3(0.025);

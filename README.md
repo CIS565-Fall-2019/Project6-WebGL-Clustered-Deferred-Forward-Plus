@@ -3,7 +3,7 @@
 WebGL Clustered and Forward+ Shading
 ======================
 
-**University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 5**
+**University of Pennsylvania, CIS 565: GPU Programming and Architecture, Project 6**
 
 * Name: Vaibhav Arcot
   *  [LinkedIn] (https://www.linkedin.com/in/vaibhav-arcot-129829167/)

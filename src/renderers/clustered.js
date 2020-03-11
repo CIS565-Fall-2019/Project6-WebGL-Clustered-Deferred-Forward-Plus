@@ -1,5 +1,5 @@
 import { gl, WEBGL_draw_buffers, canvas } from '../init';
-import { mat4, vec4 } from 'gl-matrix';
+import { mat3, mat4, vec3, vec4 } from 'gl-matrix';
 import { loadShaderProgram, renderFullscreenQuad } from '../utils';
 import { NUM_LIGHTS } from '../scene';
 import toTextureVert from '../shaders/deferredToTexture.vert.glsl';
@@ -9,7 +9,8 @@ import fsSource from '../shaders/deferred.frag.glsl.js';
 import TextureBuffer from './textureBuffer';
 import BaseRenderer from './base';
 
-export const NUM_GBUFFERS = 4;
+// Added g buffers for differed rendering (normals and albedo)
+export const NUM_GBUFFERS = 3;
 
 export default class ClusteredRenderer extends BaseRenderer {
   constructor(xSlices, ySlices, zSlices) {
@@ -28,8 +29,11 @@ export default class ClusteredRenderer extends BaseRenderer {
     this._progShade = loadShaderProgram(QuadVertSource, fsSource({
       numLights: NUM_LIGHTS,
       numGBuffers: NUM_GBUFFERS,
+      clusterTextureWidth: this._clusterTexture._elementCount, clusterTextureHeight: this._clusterTexture._pixelsPerElement
     }), {
-      uniforms: ['u_gbuffers[0]', 'u_gbuffers[1]', 'u_gbuffers[2]', 'u_gbuffers[3]'],
+      uniforms: ['u_gbuffers[0]', 'u_gbuffers[1]', 'u_gbuffers[2]', 'u_gbuffers[3]', 'u_modelViewMatrix', 'u_lightbuffer', 
+                 'u_clusterbuffer', 'u_nearClip', 'u_nearWidth', 'u_nearHeight', 'u_farClip', 'u_farWidth', 'u_farHeight', 
+                 'u_eyePos', 'u_xSlices', 'u_ySlices', 'u_zSlices'],
       attribs: ['a_uv'],
     });
 
@@ -153,10 +157,37 @@ export default class ClusteredRenderer extends BaseRenderer {
     // Use this shader program
     gl.useProgram(this._progShade.glShaderProgram);
 
-    // TODO: Bind any other shader inputs
+    // Bind  other shader inputs
+    // super similar to f+
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, this._lightTexture.glTexture);
+    gl.uniform1i(this._progShade.u_lightbuffer, 2);
+
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, this._clusterTexture.glTexture);
+    gl.uniform1i(this._progShade.u_clusterbuffer, 3);
+
+    // Upload the model view matrix (model is assumed to be unity
+    gl.uniformMatrix4fv(this._progShade.u_modelViewMatrix, false, this._viewMatrix);
+
+    // Upload constants
+    gl.uniform1f(this._progShade.u_nearWidth, this.nearWidth);
+    gl.uniform1f(this._progShade.u_nearHeight, this.nearHeight);
+    gl.uniform1f(this._progShade.u_farWidth, this.farWidth);
+    gl.uniform1f(this._progShade.u_farHeight, this.farHeight);
+
+    gl.uniform1f(this._progShade.u_farClip, camera.far);
+    gl.uniform1f(this._progShade.u_nearClip, camera.near);
+    // upload slices
+    gl.uniform1f(this._progShade.u_xSlices, this._xSlices);
+    gl.uniform1f(this._progShade.u_ySlices, this._ySlices);
+    gl.uniform1f(this._progShade.u_zSlices, this._zSlices);
+    // Setting the eye position
+    let cameraPos = vec3.fromValues(camera.position.x, camera.position.y, camera.position.z);
+    gl.uniform3fv(this._progShade.u_eyePos, cameraPos);
 
     // Bind g-buffers
-    const firstGBufferBinding = 0; // You may have to change this if you use other texture slots
+    const firstGBufferBinding = 4; // You may have to change this if you use other texture slots
     for (let i = 0; i < NUM_GBUFFERS; i++) {
       gl.activeTexture(gl[`TEXTURE${i + firstGBufferBinding}`]);
       gl.bindTexture(gl.TEXTURE_2D, this._gbuffers[i]);

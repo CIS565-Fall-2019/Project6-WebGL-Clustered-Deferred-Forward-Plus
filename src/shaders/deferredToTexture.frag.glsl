@@ -5,6 +5,7 @@ precision highp float;
 uniform sampler2D u_colmap;
 uniform sampler2D u_normap;
 
+varying vec3 v_viewPosition;
 varying vec3 v_position;
 varying vec3 v_normal;
 varying vec2 v_uv;
@@ -21,9 +22,8 @@ void main() {
     vec3 norm = applyNormalMap(v_normal, vec3(texture2D(u_normap, v_uv)));
     vec3 col = vec3(texture2D(u_colmap, v_uv));
 
-    // TODO: populate your g buffer
-    // gl_FragData[0] = ??
-    // gl_FragData[1] = ??
-    // gl_FragData[2] = ??
-    // gl_FragData[3] = ??
+    // populate the g buffer
+    gl_FragData[0] = vec4(norm, v_viewPosition.x);
+    gl_FragData[1] = vec4(col, v_viewPosition.y);
+    gl_FragData[2] = vec4(v_position, v_viewPosition.z);
 }
